@@ -1,0 +1,18 @@
+{
+    "name": "Calcetto Chiesa",
+    "image": "mcr.microsoft.com/devcontainers/php:1-8.3-bookworm",
+    "postCreateCommand": "bash .devcontainer/setup.sh",
+    "postAttachCommand": "php artisan serve --host=0.0.0.0 --port=8000",
+    "forwardPorts": [8000],
+    "portsAttributes": {
+        "8000": {
+            "label": "Gestionale",
+            "onAutoForward": "openBrowser"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": ["bmewburn.vscode-intelephense-client", "onecentlab.laravel-blade"]
+        }
+    }
+}
