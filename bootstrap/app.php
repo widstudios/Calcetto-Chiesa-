@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserHasRole::class,
         ]);
         $middleware->redirectUsersTo('/dashboard');
+
+        // In GitHub Codespaces l'app è raggiunta tramite il proxy di GitHub (https):
+        // senza fidarsi del proxy, link e form punterebbero a http://localhost:8000.
+        if (getenv('CODESPACES') === 'true') {
+            $middleware->trustProxies(at: '*');
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

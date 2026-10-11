@@ -13,6 +13,13 @@ Gestionale per tornei di calcetto (Laravel 13).
   - `Game`: una partita del calendario (giornata, data e ora, campo, risultato, stato). Si chiama `Game` perché `match` è una parola riservata in PHP.
 - **Pannello**: l'amministratore vede tornei e prossime partite; l'allenatore vede la rosa della propria squadra.
 
+## Provarla con GitHub Codespaces
+
+Dalla pagina del repository su GitHub: **Code → Codespaces → Create codespace** (scegli il branch da provare).
+Al primo avvio vengono installate le dipendenze e creato il database con i dati di prova; poi parte il server
+e si apre il browser sulla porta 8000. Se la scheda non si apre, vai su **Ports** e apri la porta 8000.
+Per ripartire da zero con i dati di prova: `php artisan migrate:fresh --seed`.
+
 ## Avvio in locale
 
 Servono PHP 8.3+ e Composer.
