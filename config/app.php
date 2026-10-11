@@ -80,6 +80,19 @@ return [
 
     'locale' => env('APP_LOCALE', 'en'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Proxy di cui fidarsi per X-Forwarded-Host/Proto: "*" per tutti, oppure
+    | un elenco di IP separati da virgola. In GitHub Codespaces serve "*",
+    | altrimenti link e form punterebbero a http://localhost:8000.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),

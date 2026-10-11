@@ -9,5 +9,11 @@ if [ ! -f .env ]; then
     php artisan key:generate
 fi
 
+# In Codespaces il sito passa dal proxy https di GitHub: l'app deve fidarsene.
+if [ "${CODESPACES:-}" = "true" ]; then
+    sed -i '/^TRUSTED_PROXIES=/d' .env
+    echo 'TRUSTED_PROXIES=*' >> .env
+fi
+
 touch database/database.sqlite
 php artisan migrate:fresh --seed --force
