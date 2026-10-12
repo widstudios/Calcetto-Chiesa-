@@ -44,6 +44,7 @@
                     <strong>{{ auth()->user()->name }}</strong>
                     <span>{{ auth()->user()->role->label() }}</span>
                 </div>
+                <a class="icon-btn" href="{{ route('password.edit') }}" title="Cambia password" aria-label="Cambia password"><x-icon name="key" /></a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button class="icon-btn" type="submit" title="Esci" aria-label="Esci"><x-icon name="logout" /></button>
