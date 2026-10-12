@@ -25,10 +25,27 @@
         @endif
         <div class="team away">{{ $game->awayTeam->name }}</div>
     </div>
+    @if (($sheet ?? false) && $game->isPlayed() && ($game->performances->isNotEmpty() || $game->mvp))
+        <div class="game-sheet">
+            @foreach ([$game->home_team_id, $game->away_team_id] as $side => $teamId)
+                <ul class="scorers {{ $side ? 'away' : 'home' }}">
+                    @foreach ($game->performances->where('goals', '>', 0)->filter(fn ($p) => $p->player?->team_id === $teamId) as $perf)
+                        <li><x-icon name="ball" /> {{ $perf->player->fullName() }}@if ($perf->goals > 1) ({{ $perf->goals }})@endif</li>
+                    @endforeach
+                </ul>
+            @endforeach
+            @if ($game->mvp)
+                <div class="mvp"><span class="badge gold"><x-icon name="trophy" /> Migliore in campo: {{ $game->mvp->fullName() }}</span></div>
+            @endif
+        </div>
+    @endif
     @if ($editable ?? false)
         <div class="game-bottom">
             <div class="actions">
                 <a class="btn small secondary" href="{{ route('games.edit', $game) }}"><x-icon name="pencil" /> {{ $game->isPlayed() ? 'Modifica' : 'Risultato' }}</a>
+                @if ($game->isPlayed())
+                    <a class="btn small secondary" href="{{ route('games.sheet.edit', $game) }}"><x-icon name="ball" /> Tabellino</a>
+                @endif
                 @include('partials.delete', ['action' => route('games.destroy', $game), 'confirm' => 'Eliminare questa partita?'])
             </div>
         </div>

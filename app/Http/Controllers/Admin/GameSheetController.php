@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Game;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
+
+/**
+ * Tabellino di una partita giocata: marcatori, voti e migliore in campo.
+ */
+class GameSheetController extends Controller
+{
+    public function edit(Game $game): View
+    {
+        abort_unless($game->isPlayed(), 404);
+
+        $game->load(['tournament', 'performances', 'homeTeam.players', 'awayTeam.players']);
+
+        return view('games.sheet', [
+            'game' => $game,
+            'performances' => $game->performances->keyBy('player_id'),
+        ]);
+    }
+
+    public function update(Request $request, Game $game): RedirectResponse
+    {
+        abort_unless($game->isPlayed(), 404);
+
+        $playerIds = $game->homeTeam->players()->pluck('id')->merge($game->awayTeam->players()->pluck('id'));
+
+        $data = $request->validate([
+            'players' => ['array'],
+            'players.*.goals' => ['nullable', 'integer', 'min:0', 'max:30'],
+            'players.*.rating' => ['nullable', 'numeric', 'between:1,10'],
+            'mvp_player_id' => ['nullable', Rule::in($playerIds->all())],
+        ], [
+            'players.*.goals.*' => 'I gol devono essere un numero da 0 a 30.',
+            'players.*.rating.*' => 'Il voto va da 1 a 10.',
+            'mvp_player_id.in' => 'Il migliore in campo deve giocare in una delle due squadre.',
+        ]);
+
+        foreach ($data['players'] ?? [] as $playerId => $row) {
+            if (! $playerIds->contains((int) $playerId)) {
+                continue;
+            }
+
+            $goals = (int) ($row['goals'] ?? 0);
+            $rating = $row['rating'] ?? null;
+
+            if ($goals === 0 && blank($rating)) {
+                $game->performances()->where('player_id', $playerId)->delete();
+
+                continue;
+            }
+
+            $game->performances()->updateOrCreate(['player_id' => $playerId], ['goals' => $goals, 'rating' => $rating]);
+        }
+
+        $game->update(['mvp_player_id' => $data['mvp_player_id'] ?? null]);
+
+        return redirect()->route('games.index', ['tournament' => $game->tournament_id])->with('status', 'Tabellino salvato.');
+    }
+}
