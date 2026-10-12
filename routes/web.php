@@ -2,15 +2,18 @@
 
 use App\Http\Controllers\Admin\CoachController;
 use App\Http\Controllers\Admin\GameController;
+use App\Http\Controllers\Admin\GameSheetController;
 use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\PublicController;
 use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/dashboard');
+// Sito pubblico del torneo: visibile a tutti.
+Route::get('/', PublicController::class)->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
@@ -33,5 +36,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('tournaments', TournamentController::class)->except('show');
         Route::resource('coaches', CoachController::class)->except('show')->parameters(['coaches' => 'coach']);
         Route::resource('games', GameController::class)->except('show');
+        Route::get('games/{game}/tabellino', [GameSheetController::class, 'edit'])->name('games.sheet.edit');
+        Route::put('games/{game}/tabellino', [GameSheetController::class, 'update'])->name('games.sheet.update');
     });
 });

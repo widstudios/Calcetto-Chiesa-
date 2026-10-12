@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\GameStatus;
 use App\Models\Game;
 use App\Models\Player;
 use App\Models\Team;
@@ -58,5 +59,30 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        // Le prime tre giornate già giocate, con marcatori, voti e migliore in campo.
+        $tournament->games()->with(['homeTeam.players', 'awayTeam.players'])->orderBy('matchday')->limit(3)->get()
+            ->each(function (Game $game) {
+                $scores = [];
+                foreach (['homeTeam', 'awayTeam'] as $side) {
+                    $players = $game->{$side}->players;
+                    $scores[$side] = fake()->numberBetween(0, 5);
+                    $scorers = collect(range(1, $scores[$side]))->map(fn () => $players->random()->id)->countBy();
+                    foreach ($players as $player) {
+                        $game->performances()->create([
+                            'player_id' => $player->id,
+                            'goals' => $scorers->get($player->id, 0),
+                            'rating' => fake()->randomElement([5, 5.5, 6, 6, 6.5, 6.5, 7, 7.5, 8]),
+                        ]);
+                    }
+                }
+
+                $game->update([
+                    'status' => GameStatus::Giocata,
+                    'home_score' => $scores['homeTeam'],
+                    'away_score' => $scores['awayTeam'],
+                    'mvp_player_id' => $game->performances()->orderByDesc('rating')->orderByDesc('goals')->value('player_id'),
+                ]);
+            });
     }
 }
