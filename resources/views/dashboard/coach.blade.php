@@ -7,7 +7,13 @@
 
     @forelse ($teams as $team)
         <div class="card">
-            <h2>{{ $team->name }}</h2>
+            <div class="toolbar">
+                <h2 style="margin: 0">{{ $team->name }}</h2>
+                <div class="actions">
+                    <a class="btn small" href="{{ route('teams.players.create', $team) }}">+ Aggiungi calciatore</a>
+                    <a class="btn small secondary" href="{{ route('teams.show', $team) }}">Gestisci rosa</a>
+                </div>
+            </div>
             <p class="muted">{{ $team->tournament->name }} · Allenatore: {{ $team->coachDisplayName() }}</p>
             <table>
                 <thead><tr><th>N.</th><th>Calciatore</th><th>Anno di nascita</th><th>Ruolo in rosa</th></tr></thead>

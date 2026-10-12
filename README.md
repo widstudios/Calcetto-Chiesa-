@@ -11,7 +11,13 @@ Gestionale per tornei di calcetto (Laravel 13).
   - `Team`: appartiene a un torneo, con nome allenatore (`coach_name`) e, se serve, l'account dell'allenatore (`coach_id`).
   - `Player`: nome, cognome, anno di nascita, numero di maglia, prima squadra (`titolare`) o `panchina`.
   - `Game`: una partita del calendario (giornata, data e ora, campo, risultato, stato). Si chiama `Game` perché `match` è una parola riservata in PHP.
-- **Pannello**: l'amministratore vede tornei e prossime partite; l'allenatore vede la rosa della propria squadra.
+- **Gestione dati** (menu in alto dopo l'accesso):
+  - *Tornei*: crea, modifica, elimina.
+  - *Squadre e rose*: crea le squadre con il nome dell'allenatore; nella pagina della squadra aggiungi i calciatori
+    (nome, cognome, anno di nascita, numero, prima squadra o panchina).
+  - *Allenatori*: crea gli account degli allenatori e assegna loro le squadre.
+  - *Calendario*: aggiungi le partite di un torneo e, a partita giocata, il risultato.
+  - L'allenatore vede solo le sue squadre e può gestirne la rosa; non può toccare tornei, altre squadre o calendario.
 
 ## Provarla con GitHub Codespaces
 
