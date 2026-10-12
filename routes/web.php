@@ -1,7 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\CoachController;
+use App\Http\Controllers\Admin\GameController;
+use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -14,4 +19,16 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    // Squadre: l'admin le gestisce tutte, l'allenatore vede e modifica la rosa delle sue.
+    Route::resource('teams', TeamController::class);
+    Route::scopeBindings()->group(function () {
+        Route::resource('teams.players', PlayerController::class)->except(['index', 'show']);
+    });
+
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('tournaments', TournamentController::class)->except('show');
+        Route::resource('coaches', CoachController::class)->except('show')->parameters(['coaches' => 'coach']);
+        Route::resource('games', GameController::class)->except('show');
+    });
 });
