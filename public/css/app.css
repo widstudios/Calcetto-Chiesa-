@@ -76,7 +76,7 @@ p { margin: 0 0 12px; }
 }
 .topnav { display: flex; gap: 4px; margin-left: 12px; }
 .topnav a {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; white-space: nowrap; align-items: center; gap: 8px;
     min-height: 44px; padding: 0 14px; border-radius: 999px;
     color: rgba(255, 255, 255, .85); text-decoration: none; font-weight: 600;
     transition: background-color .15s ease, color .15s ease;
@@ -86,8 +86,9 @@ p { margin: 0 0 12px; }
 .user-box { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .user-box form { margin: 0; }
 .user-chip { display: flex; flex-direction: column; text-align: right; line-height: 1.2; }
-.user-chip strong { font-weight: 600; }
-.user-chip span { font-size: .8125rem; color: rgba(255, 255, 255, .75); }
+.user-chip { max-width: 180px; }
+.user-chip strong, .user-chip span { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-chip span { font-weight: 400; font-size: .8125rem; color: rgba(255, 255, 255, .75); }
 .icon-btn {
     display: inline-grid; place-items: center;
     width: 44px; height: 44px; border-radius: 12px; cursor: pointer;
@@ -99,9 +100,12 @@ p { margin: 0 0 12px; }
 /* Barra in basso (solo telefono) */
 .bottomnav { display: none; }
 
-@media (max-width: 860px) {
+/* Il nome utente sparisce prima che la testata si stringa */
+@media (max-width: 1179px) { .user-chip { display: none; } }
+
+/* Sotto i 1024px (telefoni e tablet) il menu passa nella barra in basso */
+@media (max-width: 1023px) {
     .topnav { display: none; }
-    .user-chip { display: none; }
     .bottomnav {
         display: flex; position: fixed; z-index: 30; left: 0; right: 0; bottom: 0;
         background: var(--surface); border-top: 1px solid var(--line);
