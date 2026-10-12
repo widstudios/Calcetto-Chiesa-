@@ -3,20 +3,31 @@
 @section('title', 'Accedi')
 
 @section('content')
-    <div class="card" style="max-width: 400px; margin: 40px auto;">
-        <h1>Accedi</h1>
-        <form method="POST" action="{{ url('/login') }}">
-            @csrf
-            <label for="email">Email</label>
-            <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus>
-            @error('email') <div class="error">{{ $message }}</div> @enderror
+    <div class="auth">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <span class="brand-mark"><x-icon name="ball" /></span>
+                <div>
+                    <strong>{{ config('app.name') }}</strong>
+                    <span class="muted small">Gestionale del torneo</span>
+                </div>
+            </div>
+            <h1>Accedi</h1>
+            <p class="muted">Entra con l'email e la password che ti ha dato l'organizzazione.</p>
 
-            <label for="password">Password</label>
-            <input id="password" type="password" name="password" required>
+            <form method="POST" action="{{ url('/login') }}">
+                @csrf
+                <label for="email">Email</label>
+                <input id="email" type="email" name="email" value="{{ old('email') }}" autocomplete="email" required autofocus @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
+                @error('email') <div class="error" id="email-error"><x-icon name="alert" /> {{ $message }}</div> @enderror
 
-            <label><input type="checkbox" name="remember"> Ricordami</label>
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" autocomplete="current-password" required>
 
-            <button class="btn" type="submit">Entra</button>
-        </form>
+                <label class="inline-check"><input type="checkbox" name="remember"> Ricordami su questo dispositivo</label>
+
+                <button class="btn" type="submit">Entra</button>
+            </form>
+        </div>
     </div>
 @endsection
