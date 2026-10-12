@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
@@ -30,7 +32,17 @@ class PasswordController extends Controller
             'password.confirmed' => 'Le due nuove password non coincidono.',
         ]);
 
-        $request->user()->update(['password' => $data['password']]);
+        $user = $request->user();
+        $user->forceFill(['password' => $data['password'], 'remember_token' => Str::random(60)])->save();
+
+        // Chi aveva la vecchia password viene scollegato dagli altri dispositivi.
+        $request->session()->regenerate();
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $user->id)
+                ->where('id', '!=', $request->session()->getId())
+                ->delete();
+        }
 
         return redirect()->route('dashboard')->with('status', 'Password cambiata.');
     }

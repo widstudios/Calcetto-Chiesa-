@@ -24,7 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/password', [PasswordController::class, 'edit'])->name('password.edit');
-    Route::put('/password', [PasswordController::class, 'update'])->name('password.update');
+    Route::put('/password', [PasswordController::class, 'update'])->middleware('throttle:5,1')->name('password.update');
 
     // Squadre: l'admin le gestisce tutte, l'allenatore vede e modifica la rosa delle sue.
     Route::resource('teams', TeamController::class);

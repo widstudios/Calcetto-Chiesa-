@@ -66,7 +66,7 @@ class PublicSiteTest extends TestCase
         $this->assertEquals(8.5, $stats->bestRatings()->first()->average_rating);
         $this->assertSame(1, $stats->mvpLeaders()->first()->mvp_count);
 
-        $this->get('/')->assertOk()->assertSee('Migliore in campo: Gianni Gol');
+        $this->get('/?torneo='.$game->tournament_id)->assertOk()->assertSee('Migliore in campo: Gianni Gol');
     }
 
     public function test_sheet_rejects_mvp_from_other_teams_and_unplayed_games(): void
