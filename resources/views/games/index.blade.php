@@ -3,18 +3,21 @@
 @section('title', 'Calendario')
 
 @section('content')
-    <div class="toolbar">
-        <h1>Calendario partite</h1>
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">{{ $tournament?->name ?? 'Calendario' }}</span>
+            <h1>Calendario partite</h1>
+        </div>
         @if ($tournament)
-            <a class="btn small" href="{{ route('games.create', ['tournament' => $tournament->id]) }}">+ Nuova partita</a>
+            <a class="btn" href="{{ route('games.create', ['tournament' => $tournament->id]) }}"><x-icon name="plus" /> Nuova partita</a>
         @endif
     </div>
 
     @if (! $tournament)
-        <div class="card"><p class="muted">Prima crea un torneo e le sue squadre.</p></div>
+        <div class="card empty"><x-icon name="calendar" /><p>Prima crea un torneo e le sue squadre.</p></div>
     @else
-        <form class="card" method="GET" action="{{ route('games.index') }}">
-            <label for="tournament" style="margin-top: 0">Torneo</label>
+        <form class="card flush filter" method="GET" action="{{ route('games.index') }}">
+            <label for="tournament">Torneo</label>
             <select id="tournament" name="tournament" onchange="this.form.submit()">
                 @foreach ($tournaments as $t)
                     <option value="{{ $t->id }}" @selected($t->is($tournament))>{{ $t->name }}</option>
@@ -22,34 +25,13 @@
             </select>
         </form>
 
-        <div class="card table-wrap">
+        <div class="card flush">
             @if ($games->isEmpty())
-                <p class="muted">Nessuna partita in calendario.</p>
+                <div class="empty"><x-icon name="calendar" /><p>Nessuna partita in calendario.</p></div>
             @else
-                <table>
-                    <thead><tr><th>Giornata</th><th>Data</th><th>Partita</th><th>Risultato</th><th>Campo</th><th></th></tr></thead>
-                    <tbody>
-                    @foreach ($games as $game)
-                        <tr>
-                            <td>{{ $game->matchday }}</td>
-                            <td>{{ $game->kickoff_at?->format('d/m/Y H:i') }}</td>
-                            <td><a href="{{ route('games.edit', $game) }}">{{ $game->homeTeam->name }} – {{ $game->awayTeam->name }}</a></td>
-                            <td>
-                                @if ($game->isPlayed())
-                                    <strong>{{ $game->home_score }} – {{ $game->away_score }}</strong>
-                                @else
-                                    <span class="muted">{{ $game->status->label() }}</span>
-                                @endif
-                            </td>
-                            <td>{{ $game->venue }}</td>
-                            <td class="actions">
-                                <a class="btn small secondary" href="{{ route('games.edit', $game) }}">Modifica</a>
-                                @include('partials.delete', ['action' => route('games.destroy', $game), 'confirm' => 'Eliminare questa partita?'])
-                            </td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+                @foreach ($games as $game)
+                    @include('partials.game', ['game' => $game, 'editable' => true])
+                @endforeach
             @endif
         </div>
     @endif

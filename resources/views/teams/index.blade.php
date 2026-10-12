@@ -3,16 +3,19 @@
 @section('title', auth()->user()->isAdmin() ? 'Squadre' : 'La mia rosa')
 
 @section('content')
-    <div class="toolbar">
-        <h1>{{ auth()->user()->isAdmin() ? 'Squadre' : 'Le mie squadre' }}</h1>
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">{{ auth()->user()->isAdmin() ? 'Squadre e rose' : 'La mia rosa' }}</span>
+            <h1>{{ auth()->user()->isAdmin() ? 'Squadre' : 'Le mie squadre' }}</h1>
+        </div>
         @can('create', App\Models\Team::class)
-            <a class="btn small" href="{{ route('teams.create', ['tournament' => request('tournament')]) }}">+ Nuova squadra</a>
+            <a class="btn" href="{{ route('teams.create', ['tournament' => request('tournament')]) }}"><x-icon name="plus" /> Nuova squadra</a>
         @endcan
     </div>
 
     @if ($tournaments->isNotEmpty())
-        <form class="card" method="GET" action="{{ route('teams.index') }}">
-            <label for="tournament" style="margin-top: 0">Torneo</label>
+        <form class="card flush filter" method="GET" action="{{ route('teams.index') }}">
+            <label for="tournament">Torneo</label>
             <select id="tournament" name="tournament" onchange="this.form.submit()">
                 <option value="">Tutti i tornei</option>
                 @foreach ($tournaments as $t)
@@ -22,30 +25,37 @@
         </form>
     @endif
 
-    <div class="card table-wrap">
+    <div class="card flush">
         @if ($teams->isEmpty())
-            <p class="muted">
-                @if (auth()->user()->isAdmin())
-                    Nessuna squadra. Prima crea un torneo, poi aggiungi le squadre.
-                @else
-                    Non hai ancora una squadra assegnata. Chiedi all'amministratore del torneo.
-                @endif
-            </p>
+            <div class="empty">
+                <x-icon name="users" />
+                <p>
+                    @if (auth()->user()->isAdmin())
+                        Nessuna squadra. Prima crea un torneo, poi aggiungi le squadre.
+                    @else
+                        Non hai ancora una squadra assegnata. Chiedi all'amministratore del torneo.
+                    @endif
+                </p>
+            </div>
         @else
-            <table>
-                <thead><tr><th>Squadra</th><th>Torneo</th><th>Allenatore</th><th>Calciatori</th><th></th></tr></thead>
-                <tbody>
+            <ul class="list">
                 @foreach ($teams as $team)
-                    <tr>
-                        <td><a href="{{ route('teams.show', $team) }}"><strong>{{ $team->name }}</strong></a></td>
-                        <td>{{ $team->tournament->name }}</td>
-                        <td>{{ $team->coachDisplayName() ?? '—' }}</td>
-                        <td>{{ $team->players_count }}</td>
-                        <td class="actions"><a class="btn small secondary" href="{{ route('teams.show', $team) }}">Apri rosa</a></td>
-                    </tr>
+                    <li class="list-item">
+                        <span class="avatar">{{ mb_substr($team->name, 0, 2) }}</span>
+                        <div class="list-main">
+                            <a class="list-title" href="{{ route('teams.show', $team) }}">{{ $team->name }}</a>
+                            <div class="list-meta">
+                                <span><x-icon name="trophy" /> {{ $team->tournament->name }}</span>
+                                <span><x-icon name="coach" /> {{ $team->coachDisplayName() ?? 'Allenatore non indicato' }}</span>
+                                <span><x-icon name="shirt" /> {{ $team->players_count }} calciatori</span>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <a class="btn small secondary" href="{{ route('teams.show', $team) }}"><span class="btn-text">Apri rosa</span> <x-icon name="chevron" /></a>
+                        </div>
+                    </li>
                 @endforeach
-                </tbody>
-            </table>
+            </ul>
         @endif
     </div>
 @endsection
