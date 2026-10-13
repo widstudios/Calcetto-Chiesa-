@@ -19,6 +19,7 @@
                 ['teams.index', 'teams.*', 'Squadre', 'users'],
                 ['coaches.index', 'coaches.*', 'Allenatori', 'coach'],
                 ['games.index', 'games.*', 'Calendario', 'calendar'],
+                ['imports.index', 'imports.*', 'Importa', 'upload'],
             ]
             : [
                 ['dashboard', 'dashboard', 'Home', 'home'],

@@ -32,6 +32,7 @@
             <a href="{{ route('teams.create') }}"><x-icon name="users" /> Nuova squadra</a>
             <a href="{{ route('coaches.create') }}"><x-icon name="coach" /> Nuovo allenatore</a>
             <a href="{{ route('games.index') }}"><x-icon name="calendar" /> Calendario partite</a>
+            <a href="{{ route('imports.index') }}"><x-icon name="upload" /> Importa da Excel</a>
         </div>
         <p class="hint">I calciatori si aggiungono dalla pagina della squadra (Squadre → apri la rosa).</p>
     </section>
