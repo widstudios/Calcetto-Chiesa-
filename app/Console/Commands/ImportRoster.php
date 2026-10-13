@@ -54,10 +54,8 @@ class ImportRoster extends Command
         }
 
         [$team, $added] = DB::transaction(function () use ($category, $rows, $trainings) {
-            $tournament = Tournament::firstOrCreate(
-                ['name' => $category],
-                ['season' => $this->option('stagione')],
-            );
+            // Ogni stagione ha il suo torneo: rilanciare per una nuova stagione non tocca la precedente.
+            $tournament = Tournament::firstOrCreate(['name' => $category, 'season' => $this->option('stagione')]);
 
             $team = Team::firstOrCreate(['tournament_id' => $tournament->id, 'name' => $category]);
             if ($this->option('allenatore')) {
@@ -67,8 +65,8 @@ class ImportRoster extends Command
             $added = 0;
             foreach ($rows as $row) {
                 $player = $team->players()->firstOrCreate(
-                    ['first_name' => $row['nome'], 'last_name' => $row['cognome']],
-                    ['birth_year' => $row['anno'], 'squad_role' => SquadRole::Titolare],
+                    ['first_name' => $row['nome'], 'last_name' => $row['cognome'], 'birth_year' => $row['anno']],
+                    ['squad_role' => SquadRole::Titolare],
                 );
                 $added += $player->wasRecentlyCreated ? 1 : 0;
             }
@@ -121,7 +119,7 @@ class ImportRoster extends Command
         foreach ($lines as $i => $line) {
             $values = array_map('trim', str_getcsv($line, $separator));
             $row = array_combine($header, array_pad(array_slice($values, 0, count($header)), count($header), ''));
-            if ($row['cognome'] === '' || $row['nome'] === '' || ! preg_match('/^(19|20)\d\d$/', $row['anno'])) {
+            if ($row['cognome'] === '' || $row['nome'] === '' || ! ctype_digit($row['anno']) || $row['anno'] < 1940 || $row['anno'] > now()->year) {
                 $this->error('Riga '.($i + 2).' non valida: servono cognome, nome e anno di nascita (es. 2013).');
 
                 return null;

@@ -54,7 +54,21 @@ class CategoryTest extends TestCase
         $this->artisan('rosa:importa', ['file' => $this->csv("cognome,nome,anno\nRossi,Mario,2013\n"), '--categoria' => 'Under 14', '--allenamento' => ['lunedì|Campo|20:00|19:00']])
             ->assertFailed();
 
+        $this->artisan('rosa:importa', ['file' => $this->csv("cognome,nome,anno\nRossi,Mario,2099\n"), '--categoria' => 'Under 14'])
+            ->assertFailed();
+
         $this->assertSame(0, Team::count());
+    }
+
+    public function test_import_keeps_seasons_and_namesakes_apart(): void
+    {
+        $file = $this->csv("cognome;nome;anno\nRossi;Mario;2013\nRossi;Mario;2014\n");
+
+        $this->artisan('rosa:importa', ['file' => $file, '--categoria' => 'Under 14', '--stagione' => '2026/27'])->assertSuccessful();
+        $this->artisan('rosa:importa', ['file' => $file, '--categoria' => 'Under 14', '--stagione' => '2027/28'])->assertSuccessful();
+
+        $this->assertSame(2, Team::count());
+        Team::all()->each(fn (Team $team) => $this->assertSame(2, $team->players()->count()));
     }
 
     public function test_coach_manages_trainings_of_own_team_only(): void
