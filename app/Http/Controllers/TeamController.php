@@ -35,7 +35,7 @@ class TeamController extends Controller
     {
         Gate::authorize('view', $team);
 
-        $team->load(['tournament', 'coach', 'players' => fn ($q) => $q->orderBy('squad_role')->orderBy('shirt_number')]);
+        $team->load(['tournament', 'coach', 'trainings', 'players' => fn ($q) => $q->orderBy('squad_role')->orderBy('shirt_number')]);
 
         return view('teams.show', ['team' => $team]);
     }
