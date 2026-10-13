@@ -60,6 +60,16 @@ class Team extends Model
     }
 
     /**
+     * Allenamenti settimanali, in ordine di giorno e ora.
+     *
+     * @return HasMany<Training, $this>
+     */
+    public function trainings(): HasMany
+    {
+        return $this->hasMany(Training::class)->orderBy('weekday')->orderBy('starts_at');
+    }
+
+    /**
      * Tutte le partite della squadra, in casa e in trasferta.
      *
      * @return Builder<Game>

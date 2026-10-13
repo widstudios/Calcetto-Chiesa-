@@ -10,6 +10,7 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TrainingController;
 use Illuminate\Support\Facades\Route;
 
 // Sito pubblico del torneo: visibile a tutti.
@@ -30,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('teams', TeamController::class);
     Route::scopeBindings()->group(function () {
         Route::resource('teams.players', PlayerController::class)->except(['index', 'show']);
+        Route::resource('teams.trainings', TrainingController::class)->only(['store', 'destroy']);
     });
 
     Route::middleware('role:admin')->group(function () {
