@@ -20,6 +20,11 @@ class PublicSiteTest extends TestCase
         $this->get('/')->assertOk()->assertSee('Il torneo sta per cominciare');
     }
 
+    public function test_home_shows_game_rules(): void
+    {
+        $this->get('/')->assertOk()->assertSee('Regole di gioco')->assertSee('falli cumulativi')->assertSee('Cartellino azzurro');
+    }
+
     public function test_standings_follow_points_and_goal_difference(): void
     {
         $tournament = Tournament::factory()->create();

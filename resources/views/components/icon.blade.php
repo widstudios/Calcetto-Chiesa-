@@ -47,6 +47,9 @@
     @case('chevron')
         <path d="m9 18 6-6-6-6"/>
         @break
+    @case('book')
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M9 7h6M9 11h6"/>
+        @break
     @case('check')
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/>
         @break

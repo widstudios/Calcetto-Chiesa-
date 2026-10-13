@@ -31,6 +31,7 @@
                     <a href="#marcatori">Marcatori</a>
                     <a href="#pagelle">Pagelle</a>
                     <a href="#calendario">Calendario</a>
+                    <a href="#regole">Regole</a>
                 </nav>
             @endif
         </div>
@@ -130,4 +131,6 @@
             @endforelse
         </section>
     @endif
+
+    @include('public.regole')
 @endsection
