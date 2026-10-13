@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'email', 'password', 'role', 'csi_registered_on'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,6 +30,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => Role::class,
+            'csi_registered_on' => 'date',
         ];
     }
 
@@ -41,6 +42,14 @@ class User extends Authenticatable
     public function teams(): HasMany
     {
         return $this->hasMany(Team::class, 'coach_id');
+    }
+
+    /**
+     * L'allenatore è tesserato al CSI.
+     */
+    public function isCsiRegistered(): bool
+    {
+        return $this->csi_registered_on !== null;
     }
 
     public function isAdmin(): bool

@@ -13,13 +13,17 @@
         <input id="name" type="text" name="name" value="{{ old('name', $coach->name) }}" required @error('name') aria-invalid="true" @enderror>
         @include('partials.error', ['field' => 'name'])
 
-        <label for="email">Email (serve per accedere) *</label>
+        <label for="email">Email *</label>
         <input id="email" type="email" name="email" value="{{ old('email', $coach->email) }}" autocomplete="off" required @error('email') aria-invalid="true" @enderror>
         @include('partials.error', ['field' => 'email'])
 
-        <label for="password">{{ $coach->exists ? 'Nuova password (lascia vuoto per non cambiarla)' : 'Password (almeno 8 caratteri) *' }}</label>
-        <input id="password" type="password" name="password" autocomplete="new-password" @required(! $coach->exists) @error('password') aria-invalid="true" @enderror>
+        <label for="password">{{ $coach->exists ? 'Nuova password (lascia vuoto per non cambiarla)' : 'Password (almeno 8 caratteri; vuota se non deve accedere)' }}</label>
+        <input id="password" type="password" name="password" autocomplete="new-password" @error('password') aria-invalid="true" @enderror>
         @include('partials.error', ['field' => 'password'])
+
+        <label for="csi_registered_on">Tesserato CSI il (vuoto se è ancora da tesserare)</label>
+        <input id="csi_registered_on" type="date" name="csi_registered_on" value="{{ old('csi_registered_on', $coach->csi_registered_on?->format('Y-m-d')) }}" @error('csi_registered_on') aria-invalid="true" @enderror>
+        @include('partials.error', ['field' => 'csi_registered_on'])
 
         <span class="legend">Squadre che allena</span>
         @php($selected = old('teams', $coach->exists ? $coach->teams->pluck('id')->all() : []))
