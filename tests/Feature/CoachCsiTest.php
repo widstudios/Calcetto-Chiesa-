@@ -40,6 +40,17 @@ class CoachCsiTest extends TestCase
         $this->assertSame(2, User::count());
     }
 
+    public function test_import_skips_emails_of_other_accounts(): void
+    {
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+
+        $this->artisan('mister:importa', ['file' => $this->csv("nome;email;tesserato_il\nAdmin;admin@example.com;28/09/2026\n")])
+            ->expectsOutput('admin@example.com appartiene a un account che non è un allenatore: riga saltata.')
+            ->expectsOutput('0 mister aggiunti, 0 aggiornati. Tesserati CSI: 0, da tesserare: 0.')
+            ->assertSuccessful();
+        $this->assertNull($admin->fresh()->csi_registered_on);
+    }
+
     public function test_import_rejects_bad_rows(): void
     {
         $this->artisan('mister:importa', ['file' => $this->csv("nome;email;tesserato_il\nPiero;non-una-email;\n")])->assertFailed();

@@ -45,6 +45,9 @@ class ImportCoaches extends Command
                         'csi_registered_on' => $row['tesserato_il'],
                     ]);
                     $added++;
+                } elseif ($coach->role !== Role::Allenatore) {
+                    // Email di un altro tipo di account (es. amministratore): non diventa un mister.
+                    $this->warn("{$row['email']} appartiene a un account che non è un allenatore: riga saltata.");
                 } elseif ($row['tesserato_il'] !== null) {
                     $coach->update(['csi_registered_on' => $row['tesserato_il']]);
                     $updated++;
