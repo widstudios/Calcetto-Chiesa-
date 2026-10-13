@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CoachController;
 use App\Http\Controllers\Admin\GameController;
 use App\Http\Controllers\Admin\GameSheetController;
+use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
@@ -40,5 +41,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('games', GameController::class)->except('show');
         Route::get('games/{game}/tabellino', [GameSheetController::class, 'edit'])->name('games.sheet.edit');
         Route::put('games/{game}/tabellino', [GameSheetController::class, 'update'])->name('games.sheet.update');
+
+        // Import da Excel: anteprima, poi conferma.
+        Route::get('importa', [ImportController::class, 'index'])->name('imports.index');
+        Route::get('importa/{type}/modello', [ImportController::class, 'template'])->name('imports.template');
+        Route::post('importa/{type}', [ImportController::class, 'preview'])->name('imports.preview');
+        Route::post('importa/{type}/conferma', [ImportController::class, 'store'])->name('imports.store');
     });
 });
