@@ -3,7 +3,7 @@
     Per modificarle basta cambiare il testo qui sotto: ogni <details> è una sezione apribile.
     Le voci con il bollino "Scelta del torneo" non sono fissate dal CSI: adattale al vostro torneo.
     Fonti: norme tecniche CSI per il calcio a 5 ("Sport in Regola") e, per quanto non previsto,
-    il regolamento di gioco del calcio a 5 FIGC a cui il CSI rinvia.
+    il Regolamento del Giuoco del Calcio a Cinque FIGC/AIA (ed. 2025) a cui il CSI rinvia.
 --}}
 @php($locale = '<span class="badge gold">Scelta del torneo</span>')
 
@@ -21,7 +21,8 @@
             <li>Per iniziare la partita servono almeno <strong>3 giocatori</strong>. Se una squadra resta con meno di 3 giocatori, l'arbitro chiude la gara.</li>
             <li>In distinta si possono scrivere fino a <strong>12 giocatori</strong>. {!! $locale !!}</li>
             <li>Le sostituzioni sono <strong>"volanti" e illimitate</strong>: chi esce e chi entra passano dalla zona cambi davanti alla propria panchina. Chi esce deve essere fuori dal campo prima che l'altro entri.</li>
-            <li>Il portiere si può cambiare solo a <strong>gioco fermo</strong>, avvisando l'arbitro. Il portiere deve avere una maglia di colore diverso dai compagni.</li>
+            <li>Una riserva può prendere il posto del portiere anche con un <strong>cambio volante</strong>. Se invece un giocatore già in campo si scambia con il portiere, bisogna aspettare il <strong>gioco fermo</strong> e avvisare l'arbitro.</li>
+            <li>Il portiere deve avere una maglia di colore diverso dai compagni.</li>
         </ul>
     </details>
 
@@ -48,7 +49,7 @@
     <details class="matchday">
         <summary>Rimesse e calci piazzati</summary>
         <ul class="rules-list">
-            <li><strong>Calcio d'inizio</strong>: il pallone deve muoversi in avanti; gli avversari stanno ad almeno 3 metri.</li>
+            <li><strong>Calcio d'inizio</strong> a pallone fermo al centro del campo, in qualsiasi direzione; gli avversari stanno ad almeno 3 metri.</li>
             <li><strong>Rimessa laterale con i piedi</strong>, a pallone fermo sulla linea, entro <strong>4 secondi</strong>. Gli avversari a 5 metri. Non si può segnare direttamente da rimessa laterale.</li>
             <li><strong>Rimessa dal fondo</strong>: la fa il portiere <strong>con le mani</strong>, dalla propria area, entro 4 secondi.</li>
             <li><strong>Calcio d'angolo</strong> con i piedi entro 4 secondi, avversari a 5 metri.</li>
@@ -82,8 +83,8 @@
         <ul class="rules-list">
             <li><strong>Cartellino giallo</strong>: ammonizione. Due gialli nella stessa partita portano all'espulsione.</li>
             <li><strong>Cartellino azzurro</strong>: espulsione temporanea di <strong>4 minuti</strong>. La squadra gioca in quattro finché non scade il tempo o finché non subisce un gol. Ai fini della squalifica vale come due ammonizioni.</li>
-            <li><strong>Cartellino rosso</strong>: espulsione definitiva e almeno una giornata di squalifica. Il giocatore non rientra; un compagno può prendere il suo posto con il consenso dell'arbitro a gioco fermo.</li>
-            <li>Quattro ammonizioni in partite diverse fanno scattare una giornata di squalifica.</li>
+            <li><strong>Cartellino rosso</strong>: espulsione definitiva e almeno una giornata di squalifica. Il giocatore non rientra: la squadra resta in inferiorità per <strong>2 minuti effettivi</strong>, o finché non subisce un gol, poi un compagno può entrare con il consenso dell'arbitro. {!! $locale !!}</li>
+            <li>Quattro ammonizioni in partite diverse fanno scattare una giornata di squalifica. {!! $locale !!}</li>
             <li>Prima e dopo la partita le squadre si salutano e si stringono la mano: è il <strong>fair play</strong> dell'oratorio.</li>
         </ul>
     </details>
