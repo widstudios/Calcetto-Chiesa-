@@ -438,6 +438,12 @@ table.standings tr.leader .pos { color: #92400e; }
 .matchday summary:hover { background: var(--surface-2); }
 .matchday[open] summary { border-bottom: 1px solid var(--line); }
 
+/* Regole di gioco */
+.rules-intro { margin: 0; padding: 0 20px 14px; color: var(--muted); }
+.rules-intro .badge, .rules-list .badge { font-size: .75rem; padding: 1px 8px; vertical-align: 1px; }
+.rules-list { margin: 0; padding: 12px 20px 16px 40px; display: grid; gap: 8px; line-height: 1.5; }
+.rules .legend-line { margin-top: 0; }
+
 .site-footer { text-align: center; color: var(--muted); font-size: .875rem; padding: 0 16px 32px; }
 
 table.sheet td { padding: 8px; }
