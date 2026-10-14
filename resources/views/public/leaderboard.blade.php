@@ -2,12 +2,12 @@
 @if ($players->isEmpty())
     <div class="empty"><p>{{ $empty }}</p></div>
 @else
-    {{-- I primi 5 sempre visibili, gli altri dietro "Vedi tutti" per non allungare troppo la pagina sul telefono. --}}
+    {{-- I primi 5 sempre visibili, gli altri (fino al limite della classifica) dietro "Altri N" per non allungare troppo la pagina sul telefono. --}}
     @foreach ($players->values()->partition(fn ($p, $i) => $i < 5) as $group)
         @continue($group->isEmpty())
         @if (! $loop->first)
             <details class="leaderboard-more">
-                <summary>Vedi tutti ({{ $players->count() }})</summary>
+                <summary>Altri {{ $group->count() }} in classifica</summary>
         @endif
         <ol class="leaderboard" start="{{ $group->keys()->first() + 1 }}">
             @foreach ($group as $i => $player)
