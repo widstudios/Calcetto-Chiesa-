@@ -3,39 +3,71 @@
 @section('title', $tournament?->name ?? 'Torneo')
 
 @section('hero')
+    @php($next = $tournament ? $nextGames->first() : null)
     <section class="hero">
-        <div class="hero-inner">
-            <span class="eyebrow">{{ $tournament?->season ? 'Stagione '.$tournament->season : 'Torneo di calcetto' }}</span>
-            <h1>{{ $tournament?->name ?? config('app.name') }}</h1>
-            @if ($tournaments->count() > 1)
-                <form class="hero-select" method="GET" action="{{ route('home') }}">
-                    <label class="sr-only" for="torneo">Scegli il torneo</label>
-                    <select id="torneo" name="torneo" onchange="this.form.submit()">
-                        @foreach ($tournaments as $t)
-                            <option value="{{ $t->id }}" @selected($t->is($tournament))>{{ $t->name }}</option>
-                        @endforeach
-                    </select>
-                    <noscript><button class="btn small accent" type="submit">Vai</button></noscript>
-                </form>
-            @endif
-            @if ($tournament)
-                <div class="hero-stats">
-                    <div><strong>{{ $totals['teams'] }}</strong><span>Squadre</span></div>
-                    <div><strong>{{ $totals['played'] }}</strong><span>Partite giocate</span></div>
-                    <div><strong>{{ $totals['goals'] }}</strong><span>Gol segnati</span></div>
-                    <div><strong>{{ $totals['played'] ? number_format($totals['goals'] / $totals['played'], 1, ',', '') : '–' }}</strong><span>Gol a partita</span></div>
-                </div>
-                <nav class="hero-links" aria-label="Sezioni">
-                    <a href="#classifica">Classifica</a>
-                    <a href="#risultati">Risultati</a>
-                    <a href="#marcatori">Marcatori</a>
-                    <a href="#pagelle">Pagelle</a>
-                    <a href="#calendario">Calendario</a>
-                    <a href="#regole">Regole</a>
-                </nav>
+        <div @class(['hero-inner', 'has-next' => $next])>
+            <div class="hero-main">
+                <span class="eyebrow">{{ $tournament?->season ? 'Stagione '.$tournament->season : 'Torneo di calcetto' }}</span>
+                <h1>{{ $tournament?->name ?? config('app.name') }}</h1>
+                @if ($tournaments->count() > 1)
+                    <form class="hero-select" method="GET" action="{{ route('home') }}">
+                        <label class="sr-only" for="torneo">Scegli il torneo</label>
+                        <select id="torneo" name="torneo" onchange="this.form.submit()">
+                            @foreach ($tournaments as $t)
+                                <option value="{{ $t->id }}" @selected($t->is($tournament))>{{ $t->name }}</option>
+                            @endforeach
+                        </select>
+                        <noscript><button class="btn small accent" type="submit">Vai</button></noscript>
+                    </form>
+                @endif
+                @if ($tournament)
+                    <dl class="scoreboard">
+                        <div><dt>Squadre</dt><dd>{{ $totals['teams'] }}</dd></div>
+                        <div><dt>Giocate</dt><dd>{{ $totals['played'] }}</dd></div>
+                        <div><dt>Gol</dt><dd>{{ $totals['goals'] }}</dd></div>
+                        <div><dt>Gol a partita</dt><dd>{{ $totals['played'] ? number_format($totals['goals'] / $totals['played'], 1, ',', '') : '–' }}</dd></div>
+                    </dl>
+                @endif
+            </div>
+
+            @if ($next)
+                <a class="next-match" href="#calendario">
+                    <span class="next-label">Prossima partita @if ($next->matchday)<span>· {{ $next->matchday }}ª giornata</span>@endif</span>
+                    <span class="next-teams">
+                        <strong>{{ $next->homeTeam->name }}</strong>
+                        <span class="next-vs">vs</span>
+                        <strong>{{ $next->awayTeam->name }}</strong>
+                    </span>
+                    <span class="next-when">
+                        @if ($next->status === \App\Enums\GameStatus::Rinviata)
+                            <span><x-icon name="clock" /> Rinviata</span>
+                        @elseif ($next->kickoff_at)
+                            <span><x-icon name="calendar" /> {{ ucfirst($next->kickoff_at->locale('it')->translatedFormat('l j F')) }}</span>
+                            <span><x-icon name="clock" /> {{ $next->kickoff_at->format('H:i') }}</span>
+                        @else
+                            <span><x-icon name="calendar" /> Data da definire</span>
+                        @endif
+                        @if ($next->venue)
+                            <span><x-icon name="pin" /> {{ $next->venue }}</span>
+                        @endif
+                    </span>
+                </a>
             @endif
         </div>
     </section>
+
+    @if ($tournament)
+        <nav class="section-nav" aria-label="Sezioni della pagina">
+            <div class="section-nav-inner">
+                <a href="#classifica">Classifica</a>
+                <a href="#risultati">Risultati</a>
+                <a href="#marcatori">Marcatori</a>
+                <a href="#pagelle">Pagelle</a>
+                <a href="#calendario">Calendario</a>
+                <a href="#regole">Regole</a>
+            </div>
+        </nav>
+    @endif
 @endsection
 
 @section('content')
@@ -121,7 +153,11 @@
             <div class="card-head"><h2><x-icon name="calendar" /> Calendario completo</h2></div>
             @forelse ($matchdays as $day => $dayGames)
                 <details class="matchday" @if ($day === $openMatchday) open @endif>
-                    <summary>{{ $day ? $day.'ª giornata' : 'Senza giornata' }} <span class="muted small">{{ $dayGames->filter->isPlayed()->count() }}/{{ $dayGames->count() }} giocate</span></summary>
+                    @php($done = $dayGames->filter->isPlayed()->count())
+                    <summary>
+                        <span>{{ $day ? $day.'ª giornata' : 'Senza giornata' }}</span>
+                        <span @class(['day-progress', 'complete' => $done === $dayGames->count()])>{{ $done }}/{{ $dayGames->count() }} giocate</span>
+                    </summary>
                     @foreach ($dayGames as $game)
                         @include('partials.game', ['game' => $game, 'sheet' => true])
                     @endforeach
