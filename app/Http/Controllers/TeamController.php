@@ -18,9 +18,9 @@ class TeamController extends Controller
     {
         $user = $request->user();
 
-        $teams = Team::with(['tournament', 'coach'])
+        $teams = Team::with(['tournament', 'coaches'])
             ->withCount('players')
-            ->when(! $user->isAdmin(), fn ($q) => $q->where('coach_id', $user->id))
+            ->when(! $user->isAdmin(), fn ($q) => $q->whereRelation('coaches', 'users.id', $user->id))
             ->when($request->integer('tournament'), fn ($q, $id) => $q->where('tournament_id', $id))
             ->orderBy('name')
             ->get();
@@ -35,7 +35,7 @@ class TeamController extends Controller
     {
         Gate::authorize('view', $team);
 
-        $team->load(['tournament', 'coach', 'trainings', 'players' => fn ($q) => $q->orderBy('squad_role')->orderBy('shirt_number')]);
+        $team->load(['tournament', 'coaches', 'trainings', 'players' => fn ($q) => $q->orderBy('squad_role')->orderBy('shirt_number')]);
 
         return view('teams.show', ['team' => $team]);
     }
@@ -54,7 +54,9 @@ class TeamController extends Controller
     {
         Gate::authorize('create', Team::class);
 
-        $team = Team::create($this->validated($request));
+        $data = $this->validated($request);
+        $team = Team::create($data);
+        $team->coaches()->sync($data['coaches'] ?? []);
 
         return redirect()->route('teams.show', $team)->with('status', 'Squadra creata. Ora puoi inserire i calciatori.');
     }
@@ -70,7 +72,9 @@ class TeamController extends Controller
     {
         Gate::authorize('update', $team);
 
-        $team->update($this->validated($request, $team));
+        $data = $this->validated($request, $team);
+        $team->update($data);
+        $team->coaches()->sync($data['coaches'] ?? []);
 
         return redirect()->route('teams.show', $team)->with('status', 'Squadra aggiornata.');
     }
@@ -107,7 +111,8 @@ class TeamController extends Controller
                 Rule::unique('teams')->where('tournament_id', $request->input('tournament_id'))->ignore($team),
             ],
             'coach_name' => ['nullable', 'string', 'max:255'],
-            'coach_id' => ['nullable', Rule::exists('users', 'id')->where('role', Role::Allenatore->value)],
+            'coaches' => ['array'],
+            'coaches.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Allenatore->value)],
         ], [
             'name.unique' => 'In questo torneo esiste già una squadra con questo nome.',
         ]);

@@ -95,7 +95,7 @@ class ExcelImportTest extends TestCase
         $coach = User::factory()->create(['email' => 'luca@example.com']);
         $this->import('squadre', $this->csv("torneo;squadra;allenatore;email_allenatore\nTorneo di primavera;Leoni;Mario Rossi;\nTorneo di Primavera;Aquile;;LUCA@example.com\n"));
         $this->assertSame(['Aquile', 'Leoni'], $tournament->teams()->orderBy('name')->pluck('name')->all());
-        $this->assertTrue(Team::firstWhere('name', 'Aquile')->coach->is($coach));
+        $this->assertTrue(Team::firstWhere('name', 'Aquile')->coaches->sole()->is($coach));
 
         $players = [
             ['torneo', 'squadra', 'cognome', 'nome', 'anno', 'numero', 'ruolo'],

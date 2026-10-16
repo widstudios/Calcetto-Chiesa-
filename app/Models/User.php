@@ -8,7 +8,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -37,11 +37,11 @@ class User extends Authenticatable
     /**
      * Squadre allenate da questo utente.
      *
-     * @return HasMany<Team, $this>
+     * @return BelongsToMany<Team, $this>
      */
-    public function teams(): HasMany
+    public function teams(): BelongsToMany
     {
-        return $this->hasMany(Team::class, 'coach_id');
+        return $this->belongsToMany(Team::class, 'coach_team');
     }
 
     /**

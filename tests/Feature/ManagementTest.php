@@ -113,11 +113,38 @@ class ManagementTest extends TestCase
 
         $coach = User::firstWhere('email', 'mario@example.com');
         $this->assertSame(Role::Allenatore, $coach->role);
-        $this->assertTrue($team->fresh()->coach->is($coach));
+        $this->assertTrue($team->fresh()->coaches->sole()->is($coach));
 
         $this->post(route('logout'));
         $this->post('/login', ['email' => 'mario@example.com', 'password' => 'segreta123']);
         $this->assertAuthenticatedAs($coach);
+    }
+
+    public function test_coaches_share_teams_without_removing_each_other(): void
+    {
+        [$leoni, $aquile] = Team::factory()->count(2)->create(['coach_name' => null]);
+        $mario = User::factory()->create(['name' => 'Mario Rossi']);
+        $luca = User::factory()->create(['name' => 'Luca Bianchi']);
+        $mario->teams()->attach([$leoni->id, $aquile->id]);
+
+        // Dare a Luca una squadra di Mario non la toglie a Mario.
+        $this->actingAs($this->admin)
+            ->put(route('coaches.update', $luca), ['name' => $luca->name, 'email' => $luca->email, 'teams' => [$leoni->id]])
+            ->assertRedirect(route('coaches.index'));
+
+        $this->assertEqualsCanonicalizing([$leoni->id, $aquile->id], $mario->teams()->pluck('teams.id')->all());
+        $this->assertSame(['Luca Bianchi', 'Mario Rossi'], $leoni->coaches()->pluck('name')->all());
+        $this->assertSame('Luca Bianchi, Mario Rossi', $leoni->fresh()->coachDisplayName());
+
+        // Dalla scheda squadra si scelgono più account insieme.
+        $this->put(route('teams.update', $aquile), [
+            'tournament_id' => $aquile->tournament_id, 'name' => $aquile->name, 'coaches' => [$mario->id, $luca->id],
+        ])->assertRedirect(route('teams.show', $aquile));
+        $this->assertCount(2, $aquile->coaches()->get());
+
+        // Entrambi gestiscono la rosa della squadra condivisa.
+        $this->actingAs($luca)->get(route('teams.show', $leoni))->assertOk();
+        $this->actingAs($mario)->get(route('teams.show', $leoni))->assertOk();
     }
 
     public function test_editing_coach_without_password_keeps_it(): void

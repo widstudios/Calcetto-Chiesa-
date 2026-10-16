@@ -26,7 +26,7 @@ class DashboardController extends Controller
 
         return view('dashboard.coach', [
             'teams' => $user->teams()
-                ->with(['tournament', 'players' => fn ($q) => $q->orderBy('shirt_number')])
+                ->with(['tournament', 'coaches', 'players' => fn ($q) => $q->orderBy('shirt_number')])
                 ->get(),
         ]);
     }

@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['tournament_id', 'name', 'coach_name', 'coach_id'])]
+#[Fillable(['tournament_id', 'name', 'coach_name'])]
 class Team extends Model
 {
     /** @use HasFactory<TeamFactory> */
@@ -26,13 +27,18 @@ class Team extends Model
     }
 
     /**
-     * Account dell'allenatore, se ne ha uno.
+     * Account degli allenatori che gestiscono la squadra (anche più d'uno).
      *
-     * @return BelongsTo<User, $this>
+     * @return BelongsToMany<User, $this>
      */
-    public function coach(): BelongsTo
+    public function coaches(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'coach_id');
+        return $this->belongsToMany(User::class, 'coach_team')->orderBy('name');
+    }
+
+    public function isCoachedBy(User $user): bool
+    {
+        return $this->coaches()->whereKey($user->id)->exists();
     }
 
     /**
@@ -86,6 +92,6 @@ class Team extends Model
      */
     public function coachDisplayName(): ?string
     {
-        return $this->coach_name ?? $this->coach?->name;
+        return $this->coach_name ?? ($this->coaches->pluck('name')->join(', ') ?: null);
     }
 }
