@@ -32,15 +32,18 @@
             <input id="coach_name" type="text" name="coach_name" value="{{ old('coach_name', $team->coach_name) }}">
             @include('partials.error', ['field' => 'coach_name'])
 
-            <label for="coach_id">Account dell'allenatore (facoltativo)</label>
-            <select id="coach_id" name="coach_id" aria-describedby="coach_id-hint">
-                <option value="">Nessuno</option>
-                @foreach ($coaches as $coach)
-                    <option value="{{ $coach->id }}" @selected(old('coach_id', $team->coach_id) == $coach->id)>{{ $coach->name }} ({{ $coach->email }})</option>
-                @endforeach
-            </select>
-            <p class="hint" id="coach_id-hint">Se l'allenatore ha un account, potrà entrare e gestire da solo la rosa. Gli account si creano in <a href="{{ route('coaches.index') }}">Allenatori</a>.</p>
-            @include('partials.error', ['field' => 'coach_id'])
+            <span class="legend">Account degli allenatori (facoltativo, anche più d'uno)</span>
+            @php($selectedCoaches = array_map('intval', old('coaches', $team->exists ? $team->coaches->pluck('id')->all() : [])))
+            @forelse ($coaches as $coach)
+                <label class="check">
+                    <input type="checkbox" name="coaches[]" value="{{ $coach->id }}" @checked(in_array($coach->id, $selectedCoaches))>
+                    <span>{{ $coach->name }} <span class="muted">({{ $coach->email }})</span></span>
+                </label>
+            @empty
+                <p class="muted">Nessun account allenatore.</p>
+            @endforelse
+            <p class="hint">Chi ha un account può entrare e gestire da solo la rosa. Gli account si creano in <a href="{{ route('coaches.index') }}">Allenatori</a>.</p>
+            @include('partials.error', ['field' => 'coaches'])
 
             <div class="form-actions">
                 <button class="btn" type="submit">Salva</button>

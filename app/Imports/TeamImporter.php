@@ -68,7 +68,11 @@ class TeamImporter extends Importer
     public function save(array $data): bool
     {
         $team = $this->teamOrCreate($this->tournamentOrCreate($data['torneo'], $data['stagione']), $data['squadra']);
-        $team->update(array_filter(['coach_name' => $data['allenatore'], 'coach_id' => $data['coach_id']]));
+        $team->update(array_filter(['coach_name' => $data['allenatore']]));
+        if ($data['coach_id'] !== null) {
+            // Si aggiunge agli allenatori già presenti, senza toglierne nessuno.
+            $team->coaches()->syncWithoutDetaching([$data['coach_id']]);
+        }
 
         return $team->wasRecentlyCreated;
     }

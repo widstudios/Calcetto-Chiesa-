@@ -26,7 +26,7 @@
         @include('partials.error', ['field' => 'csi_registered_on'])
 
         <span class="legend">Squadre che allena</span>
-        @php($selected = old('teams', $coach->exists ? $coach->teams->pluck('id')->all() : []))
+        @php($selected = array_map('intval', old('teams', $coach->exists ? $coach->teams->pluck('id')->all() : [])))
         @forelse ($teams as $team)
             <label class="check">
                 <input type="checkbox" name="teams[]" value="{{ $team->id }}" @checked(in_array($team->id, $selected))>

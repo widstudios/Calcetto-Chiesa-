@@ -19,7 +19,7 @@ class TeamPolicy
 
     public function view(User $user, Team $team): bool
     {
-        return $team->coach_id === $user->id;
+        return $team->isCoachedBy($user);
     }
 
     public function create(User $user): bool
@@ -42,6 +42,6 @@ class TeamPolicy
      */
     public function manageRoster(User $user, Team $team): bool
     {
-        return $team->coach_id === $user->id;
+        return $team->isCoachedBy($user);
     }
 }

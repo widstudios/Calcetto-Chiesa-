@@ -97,8 +97,8 @@ class CoachController extends Controller
     {
         $teamIds = $request->validate(['teams' => ['array'], 'teams.*' => ['integer', 'exists:teams,id']])['teams'] ?? [];
 
-        Team::where('coach_id', $coach->id)->whereNotIn('id', $teamIds)->update(['coach_id' => null]);
-        Team::whereIn('id', $teamIds)->update(['coach_id' => $coach->id]);
+        // Tocca solo le squadre di questo allenatore: gli altri allenatori delle stesse squadre restano.
+        $coach->teams()->sync($teamIds);
     }
 
     /**

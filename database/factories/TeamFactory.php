@@ -23,7 +23,6 @@ class TeamFactory extends Factory
             'tournament_id' => Tournament::factory(),
             'name' => fake()->unique()->lastName().' FC',
             'coach_name' => fake()->name(),
-            'coach_id' => null,
         ];
     }
 
@@ -32,9 +31,6 @@ class TeamFactory extends Factory
      */
     public function withCoachAccount(?User $coach = null): static
     {
-        return $this->state(fn (array $attributes) => [
-            'coach_id' => $coach ?? User::factory(),
-            'coach_name' => null,
-        ]);
+        return $this->state(['coach_name' => null])->hasAttached($coach ?? User::factory(), [], 'coaches');
     }
 }
