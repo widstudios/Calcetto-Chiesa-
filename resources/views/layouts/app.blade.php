@@ -4,7 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#052e16">
-    <title>@yield('title', 'Gestionale') · {{ config('app.name') }}</title>
+    <title>@yield('title', 'Gestionale') · {{ \App\Models\Setting::siteName() }}</title>
+    @if ($logo = \App\Models\Setting::logoUrl())
+        <link rel="icon" href="{{ $logo }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
@@ -33,9 +36,9 @@
     <body @class(['has-nav', 'nav-wide' => count($navItems) > 6])>
     <header class="topbar">
         <div class="topbar-inner">
-            <a class="brand" href="{{ route('dashboard') }}">
-                <span class="brand-mark"><x-icon name="ball" /></span>
-                <span class="brand-name">{{ config('app.name') }}</span>
+            <a class="brand" href="{{ route('dashboard') }}" title="{{ \App\Models\Setting::siteName() }}">
+                <x-brand-mark />
+                <span class="brand-name">{{ \App\Models\Setting::siteName() }}</span>
             </a>
             <nav class="topnav" aria-label="Menu principale">
                 @foreach ($navItems as [$route, $pattern, $label, $icon])
@@ -49,6 +52,9 @@
                     <strong>{{ auth()->user()->name }}</strong>
                     <span>{{ auth()->user()->role->label() }}</span>
                 </div>
+                @if (auth()->user()->isAdmin())
+                    <a @class(['icon-btn', 'active' => request()->routeIs('settings.*')]) href="{{ route('settings.edit') }}" title="Impostazioni (nome e logo)" aria-label="Impostazioni"><x-icon name="settings" /></a>
+                @endif
                 <a class="icon-btn" href="{{ route('password.edit') }}" title="Cambia password" aria-label="Cambia password"><x-icon name="key" /></a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

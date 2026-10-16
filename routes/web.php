@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CoachController;
 use App\Http\Controllers\Admin\GameController;
 use App\Http\Controllers\Admin\GameSheetController;
 use App\Http\Controllers\Admin\ImportController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
@@ -66,5 +67,9 @@ Route::middleware('auth')->group(function () {
         Route::get('importa/{type}/modello', [ImportController::class, 'template'])->name('imports.template');
         Route::post('importa/{type}', [ImportController::class, 'preview'])->name('imports.preview');
         Route::post('importa/{type}/conferma', [ImportController::class, 'store'])->name('imports.store');
+
+        // Nome e logo del sito.
+        Route::get('impostazioni', [SettingController::class, 'edit'])->name('settings.edit');
+        Route::put('impostazioni', [SettingController::class, 'update'])->name('settings.update');
     });
 });

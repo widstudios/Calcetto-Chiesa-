@@ -6,9 +6,9 @@
     <div class="auth">
         <div class="auth-card">
             <div class="auth-brand">
-                <span class="brand-mark"><x-icon name="ball" /></span>
+                <x-brand-mark />
                 <div>
-                    <strong>{{ config('app.name') }}</strong>
+                    <strong>{{ \App\Models\Setting::siteName() }}</strong>
                     <span class="muted small">Gestionale del torneo</span>
                 </div>
             </div>

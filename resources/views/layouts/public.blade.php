@@ -4,7 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#052e16">
-    <title>@yield('title') · {{ config('app.name') }}</title>
+    <title>@yield('title') · {{ \App\Models\Setting::siteName() }}</title>
+    @if ($logo = \App\Models\Setting::logoUrl())
+        <link rel="icon" href="{{ $logo }}">
+    @endif
     <meta name="description" content="@yield('description', 'Classifica, risultati, marcatori e pagelle del torneo.')">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,8 +18,8 @@
     <header class="topbar">
         <div class="topbar-inner">
             <a class="brand" href="{{ route('home') }}">
-                <span class="brand-mark"><x-icon name="ball" /></span>
-                <span class="brand-name">{{ config('app.name') }}</span>
+                <x-brand-mark />
+                <span class="brand-name">{{ \App\Models\Setting::siteName() }}</span>
             </a>
             <div class="user-box">
                 @auth
@@ -33,8 +36,8 @@
     </main>
     <footer class="site-footer">
         <div class="site-footer-inner">
-            <span class="brand-mark small"><x-icon name="ball" /></span>
-            <span><strong>{{ config('app.name') }}</strong> · {{ now()->year }}</span>
+            <x-brand-mark small />
+            <span><strong>{{ \App\Models\Setting::siteName() }}</strong> · {{ now()->year }}</span>
             <span class="footer-links">
                 <a href="#regole">Regole di gioco</a>
                 @auth
