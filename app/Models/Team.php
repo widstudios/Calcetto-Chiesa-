@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\SquadRole;
+use Carbon\CarbonInterface;
 use Database\Factories\TeamFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 #[Fillable(['tournament_id', 'name', 'coach_name'])]
 class Team extends Model
@@ -73,6 +75,26 @@ class Team extends Model
     public function trainings(): HasMany
     {
         return $this->hasMany(Training::class)->orderBy('weekday')->orderBy('starts_at');
+    }
+
+    /**
+     * Appello degli allenamenti: presenze e assenze per data.
+     *
+     * @return HasMany<Attendance, $this>
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Allenamenti in calendario per una data (stesso giorno della settimana).
+     *
+     * @return Collection<int, Training>
+     */
+    public function trainingsOn(CarbonInterface $date): Collection
+    {
+        return $this->trainings->where('weekday', $date->dayOfWeekIso)->values();
     }
 
     /**

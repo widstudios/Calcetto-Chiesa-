@@ -16,17 +16,21 @@
             ? [
                 ['dashboard', 'dashboard', 'Home', 'home'],
                 ['tournaments.index', 'tournaments.*', 'Tornei', 'trophy'],
-                ['teams.index', 'teams.*', 'Squadre', 'users'],
+                ['teams.index', ['teams.index', 'teams.create', 'teams.show', 'teams.edit', 'teams.players.*'], 'Squadre', 'users'],
                 ['coaches.index', 'coaches.*', 'Allenatori', 'coach'],
-                ['games.index', 'games.*', 'Calendario', 'calendar'],
+                ['games.index', ['games.index', 'games.create', 'games.edit', 'games.sheet.*'], 'Calendario', 'calendar'],
+                ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
+                ['callups.index', ['callups.*', 'games.callups.*'], 'Distinte', 'clipboard'],
                 ['imports.index', 'imports.*', 'Importa', 'upload'],
             ]
             : [
                 ['dashboard', 'dashboard', 'Home', 'home'],
-                ['teams.index', 'teams.*', 'La mia rosa', 'shirt'],
+                ['teams.index', ['teams.index', 'teams.show', 'teams.players.*'], 'La mia rosa', 'shirt'],
+                ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
+                ['callups.index', ['callups.*', 'games.callups.*'], 'Distinte', 'clipboard'],
             ];
     @endphp
-    <body class="has-nav">
+    <body @class(['has-nav', 'nav-wide' => count($navItems) > 6])>
     <header class="topbar">
         <div class="topbar-inner">
             <a class="brand" href="{{ route('dashboard') }}">
@@ -35,7 +39,7 @@
             </a>
             <nav class="topnav" aria-label="Menu principale">
                 @foreach ($navItems as [$route, $pattern, $label, $icon])
-                    <a href="{{ route($route) }}" @class(['active' => request()->routeIs($pattern)]) @if (request()->routeIs($pattern)) aria-current="page" @endif>
+                    <a href="{{ route($route) }}" @class(['active' => request()->routeIs(...(array) $pattern)]) @if (request()->routeIs(...(array) $pattern)) aria-current="page" @endif>
                         <x-icon :name="$icon" /> {{ $label }}
                     </a>
                 @endforeach
@@ -63,7 +67,7 @@
 
     <nav class="bottomnav" aria-label="Menu principale">
         @foreach ($navItems as [$route, $pattern, $label, $icon])
-            <a href="{{ route($route) }}" @class(['active' => request()->routeIs($pattern)]) @if (request()->routeIs($pattern)) aria-current="page" @endif>
+            <a href="{{ route($route) }}" @class(['active' => request()->routeIs(...(array) $pattern)]) @if (request()->routeIs(...(array) $pattern)) aria-current="page" @endif>
                 <span class="icon-wrap"><x-icon :name="$icon" /></span>
                 <span>{{ $label }}</span>
             </a>

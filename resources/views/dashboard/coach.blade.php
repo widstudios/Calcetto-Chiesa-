@@ -20,6 +20,7 @@
                 <div class="actions">
                     <a class="btn small" href="{{ route('teams.players.create', $team) }}"><x-icon name="plus" /> Calciatore</a>
                     <a class="btn small secondary" href="{{ route('teams.show', $team) }}">Gestisci rosa</a>
+                    <a class="btn small secondary" href="{{ route('teams.attendances.show', $team) }}"><x-icon name="checklist" /> Appello</a>
                 </div>
             </div>
             @if ($team->players->isEmpty())

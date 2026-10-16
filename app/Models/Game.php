@@ -74,6 +74,21 @@ class Game extends Model
         return $this->hasMany(Performance::class);
     }
 
+    /**
+     * Distinte di gara delle due squadre.
+     *
+     * @return HasMany<Callup, $this>
+     */
+    public function callups(): HasMany
+    {
+        return $this->hasMany(Callup::class);
+    }
+
+    public function involves(Team $team): bool
+    {
+        return in_array($team->id, [$this->home_team_id, $this->away_team_id], true);
+    }
+
     public function isPlayed(): bool
     {
         return $this->status === GameStatus::Giocata;
