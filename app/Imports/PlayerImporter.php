@@ -111,7 +111,7 @@ class PlayerImporter extends Importer
     private function phone(string $value, string $column): ?string
     {
         $phone = preg_replace('/\s+/', ' ', trim($value));
-        if ($phone !== '' && ! preg_match('/^\+?[\d .\/-]{6,30}$/', $phone)) {
+        if ($phone !== '' && ! (strlen($phone) <= 30 && preg_match(Player::PHONE_PATTERN, $phone))) {
             throw new RowError("\"{$column}\" deve essere un numero, es. 333 123 4567.");
         }
 

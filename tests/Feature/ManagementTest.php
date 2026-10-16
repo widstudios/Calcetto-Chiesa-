@@ -85,9 +85,9 @@ class ManagementTest extends TestCase
         $this->actingAs($this->admin)
             ->post(route('teams.players.store', $team), [
                 'first_name' => 'A', 'last_name' => 'B', 'birth_year' => now()->year + 1,
-                'shirt_number' => 7, 'squad_role' => 'riserva', 'phone' => 'non so',
+                'shirt_number' => 7, 'squad_role' => 'riserva', 'phone' => 'non so', 'phone_2' => '------',
             ])
-            ->assertSessionHasErrors(['birth_year', 'shirt_number', 'squad_role', 'phone']);
+            ->assertSessionHasErrors(['birth_year', 'shirt_number', 'squad_role', 'phone', 'phone_2']);
     }
 
     public function test_player_route_is_scoped_to_its_team(): void

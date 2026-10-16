@@ -65,8 +65,8 @@ class PlayerController extends Controller
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'birth_year' => ['required', 'integer', 'min:1940', 'max:'.now()->year],
-            'phone' => ['nullable', 'string', 'max:30', 'regex:/^\+?[\d .\/-]{6,}$/'],
-            'phone_2' => ['nullable', 'string', 'max:30', 'regex:/^\+?[\d .\/-]{6,}$/'],
+            'phone' => ['nullable', 'string', 'max:30', 'regex:'.Player::PHONE_PATTERN],
+            'phone_2' => ['nullable', 'string', 'max:30', 'regex:'.Player::PHONE_PATTERN],
             'shirt_number' => [
                 'nullable', 'integer', 'min:1', 'max:99',
                 Rule::unique('players')->where('team_id', $team->id)->ignore($player),

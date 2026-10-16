@@ -14,6 +14,9 @@ use Illuminate\Support\Str;
 #[Fillable(['team_id', 'first_name', 'last_name', 'birth_year', 'phone', 'phone_2', 'shirt_number', 'squad_role'])]
 class Player extends Model
 {
+    /** Cellulare valido: almeno 6 cifre, con spazi, punti, trattini o barre in mezzo e un + iniziale facoltativo. */
+    public const PHONE_PATTERN = '/^\+?(?:[ .\/-]*\d){6,}[ .\/-]*$/';
+
     /** @use HasFactory<PlayerFactory> */
     use HasFactory;
 

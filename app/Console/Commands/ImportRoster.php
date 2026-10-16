@@ -131,7 +131,7 @@ class ImportRoster extends Command
             $phones = [];
             foreach (['cellulare1', 'cellulare2'] as $column) {
                 $phone = preg_replace('/\s+/', ' ', $row[$column] ?? '');
-                if ($phone !== '' && ! preg_match('/^\+?[\d .\/-]{6,30}$/', $phone)) {
+                if ($phone !== '' && ! (strlen($phone) <= 30 && preg_match(Player::PHONE_PATTERN, $phone))) {
                     $this->error('Riga '.($i + 2)." non valida: \"{$column}\" deve essere un numero, es. 333 123 4567.");
 
                     return null;
