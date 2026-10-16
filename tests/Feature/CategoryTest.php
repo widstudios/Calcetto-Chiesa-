@@ -47,6 +47,27 @@ class CategoryTest extends TestCase
         );
     }
 
+    public function test_import_saves_phones_shown_only_in_the_panel(): void
+    {
+        $args = ['--categoria' => 'Under 11', '--stagione' => '2026/27'];
+        $this->artisan('rosa:importa', $args + ['file' => $this->csv("cognome;nome;anno;cellulare1;cellulare2\nBIANCHI;Luca;2018;333 000 0001;333  000 0002\nD'ANGELO;Paolo;2016;;\n")])
+            ->assertSuccessful();
+        // Rilanciato con le celle vuote, non cancella i numeri salvati.
+        $this->artisan('rosa:importa', $args + ['file' => $this->csv("cognome;nome;anno\nBIANCHI;Luca;2018\n")])->assertSuccessful();
+
+        $team = Team::where('name', 'Under 11')->sole();
+        $bianchi = $team->players()->firstWhere('last_name', 'Bianchi');
+        $this->assertSame(['333 000 0001', '333 000 0002'], $bianchi->phones());
+        $this->assertSame([], $team->players()->firstWhere('last_name', "D'Angelo")->phones());
+
+        $this->actingAs(User::factory()->admin()->create())->get(route('teams.show', $team))
+            ->assertOk()->assertSee('href="tel:3330000001"', false)->assertSee('333 000 0002');
+        auth()->logout();
+        $this->get('/')->assertOk()->assertDontSee('333 000 0001');
+
+        $this->artisan('rosa:importa', $args + ['file' => $this->csv("cognome;nome;anno;cellulare1\nRossi;Mario;2013;chiamami\n")])->assertFailed();
+    }
+
     public function test_import_rejects_bad_rows(): void
     {
         $this->artisan('rosa:importa', ['file' => $this->csv("cognome,nome,anno\nRossi,Mario,\n"), '--categoria' => 'Under 14'])

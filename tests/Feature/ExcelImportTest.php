@@ -78,7 +78,7 @@ class ExcelImportTest extends TestCase
         $this->assertStringContainsString('modello-calciatori.xlsx', $response->headers->get('content-disposition'));
 
         $read = SpreadsheetReader::read($response->getFile()->getPathname(), 'xlsx');
-        $this->assertSame(['torneo', 'stagione', 'squadra', 'cognome', 'nome', 'anno', 'numero', 'ruolo'], $read['header']);
+        $this->assertSame(['torneo', 'stagione', 'squadra', 'cognome', 'nome', 'anno', 'numero', 'cellulare', 'cellulare2', 'ruolo'], $read['header']);
         $this->assertCount(2, $read['rows']);
     }
 

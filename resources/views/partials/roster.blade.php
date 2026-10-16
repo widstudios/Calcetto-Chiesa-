@@ -8,6 +8,9 @@
                 <div class="list-title">{{ $player->fullName() }}</div>
                 <div class="list-meta">
                     <span>Nato nel {{ $player->birth_year }}</span>
+                    @foreach ($player->phones() as $phone)
+                        <a class="tel" href="tel:{{ \App\Models\Player::dialable($phone) }}"><x-icon name="phone" /> {{ $phone }}</a>
+                    @endforeach
                     @if ($showRole ?? false)
                         <span @class(['badge', 'bench' => $bench])>{{ $player->squad_role->label() }}</span>
                     @endif

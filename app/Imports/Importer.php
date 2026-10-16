@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\Player;
 use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\Training;
@@ -131,7 +132,7 @@ abstract class Importer
      */
     protected function name(string $value): string
     {
-        return Str::title(Str::lower(preg_replace('/\s+/', ' ', trim($value))));
+        return Player::properName($value);
     }
 
     /**

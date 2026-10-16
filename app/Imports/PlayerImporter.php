@@ -32,6 +32,8 @@ class PlayerImporter extends Importer
             'nome*' => 'Nome',
             'anno*' => 'Anno di nascita, es. 2013',
             'numero' => 'Numero di maglia',
+            'cellulare' => 'Cellulare di contatto, es. 333 123 4567',
+            'cellulare2' => 'Secondo cellulare',
             'ruolo' => 'titolare (prima squadra) o panchina; vuoto = titolare',
         ];
     }
@@ -39,8 +41,8 @@ class PlayerImporter extends Importer
     public function example(): array
     {
         return [
-            ['Torneo di Primavera', '2026/27', 'Leoni', 'Rossi', 'Mario', 1995, 10, 'titolare'],
-            ['Torneo di Primavera', '2026/27', 'Leoni', 'Verdi', 'Paolo', 1998, 12, 'panchina'],
+            ['Torneo di Primavera', '2026/27', 'Leoni', 'Rossi', 'Mario', 1995, 10, '333 123 4567', '', 'titolare'],
+            ['Torneo di Primavera', '2026/27', 'Leoni', 'Verdi', 'Paolo', 1998, 12, '', '', 'panchina'],
         ];
     }
 
@@ -63,6 +65,8 @@ class PlayerImporter extends Importer
             'first_name' => $this->name($this->required($row, 'nome')),
             'birth_year' => $this->integer($this->required($row, 'anno'), 'anno', 1940, (int) now()->year),
             'shirt_number' => $this->integer($row['numero'] ?? '', 'numero', 0, 99),
+            'phone' => $this->phone($row['cellulare'] ?? '', 'cellulare'),
+            'phone_2' => $this->phone($row['cellulare2'] ?? '', 'cellulare2'),
             'squad_role' => $squadRole->value,
             // Il ruolo scritto nel foglio cambia quello di chi è già in rosa; una cella vuota no.
             'role_given' => $role !== '',
@@ -89,17 +93,29 @@ class PlayerImporter extends Importer
         $player = $this->find($team, $data);
 
         if ($player === null) {
-            $team->players()->create(collect($data)->only(['first_name', 'last_name', 'birth_year', 'shirt_number', 'squad_role'])->all());
+            $team->players()->create(collect($data)->only(['first_name', 'last_name', 'birth_year', 'phone', 'phone_2', 'shirt_number', 'squad_role'])->all());
 
             return true;
         }
 
         $player->update(array_filter([
             'shirt_number' => $data['shirt_number'],
+            'phone' => $data['phone'],
+            'phone_2' => $data['phone_2'],
             'squad_role' => $data['role_given'] ? $data['squad_role'] : null,
         ], fn ($value) => $value !== null));
 
         return false;
+    }
+
+    private function phone(string $value, string $column): ?string
+    {
+        $phone = preg_replace('/\s+/', ' ', trim($value));
+        if ($phone !== '' && ! (strlen($phone) <= 30 && preg_match(Player::PHONE_PATTERN, $phone))) {
+            throw new RowError("\"{$column}\" deve essere un numero, es. 333 123 4567.");
+        }
+
+        return $phone === '' ? null : $phone;
     }
 
     /**
