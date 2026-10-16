@@ -63,8 +63,9 @@ class ManagementTest extends TestCase
 
         $this->post(route('teams.players.store', $team), [
             'first_name' => 'Marco', 'last_name' => 'Verdi', 'birth_year' => 2001,
-            'shirt_number' => 10, 'squad_role' => 'titolare',
+            'phone' => '333 000 0003', 'shirt_number' => 10, 'squad_role' => 'titolare',
         ])->assertRedirect(route('teams.show', $team));
+        $this->assertSame(['333 000 0003'], $team->players()->sole()->phones());
 
         $this->post(route('teams.players.store', $team), [
             'first_name' => 'Paolo', 'last_name' => 'Neri', 'birth_year' => 2004,
@@ -84,9 +85,9 @@ class ManagementTest extends TestCase
         $this->actingAs($this->admin)
             ->post(route('teams.players.store', $team), [
                 'first_name' => 'A', 'last_name' => 'B', 'birth_year' => now()->year + 1,
-                'shirt_number' => 7, 'squad_role' => 'riserva',
+                'shirt_number' => 7, 'squad_role' => 'riserva', 'phone' => 'non so',
             ])
-            ->assertSessionHasErrors(['birth_year', 'shirt_number', 'squad_role']);
+            ->assertSessionHasErrors(['birth_year', 'shirt_number', 'squad_role', 'phone']);
     }
 
     public function test_player_route_is_scoped_to_its_team(): void

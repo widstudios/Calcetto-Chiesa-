@@ -229,6 +229,8 @@ a.list-title:hover { color: var(--primary); text-decoration: underline; }
 .list-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: .875rem; margin-top: 2px; }
 .list-meta span { display: inline-flex; align-items: center; gap: 4px; }
 .list-meta .icon { width: 16px; height: 16px; }
+.list-meta .tel { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; color: inherit; text-decoration: none; }
+.list-meta .tel:hover { color: var(--text); text-decoration: underline; }
 .avatar {
     width: 44px; height: 44px; border-radius: 12px; flex: none;
     display: grid; place-items: center;

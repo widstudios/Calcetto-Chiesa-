@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\SquadRole;
+use App\Models\Player;
 use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\Training;
@@ -14,8 +15,9 @@ use Illuminate\Support\Str;
  * Carica una categoria (es. "Under 14") con allenatori, iscritti e orari di allenamento.
  *
  * Il file CSV ha una riga di intestazione con le colonne cognome, nome, anno
- * (separate da ";" o ","). Si può rilanciare: chi è già in rosa non viene duplicato
- * e gli orari vengono sostituiti da quelli passati.
+ * (separate da ";" o ","), più le colonne facoltative cellulare1 e cellulare2.
+ * Si può rilanciare: chi è già in rosa non viene duplicato (riceve solo i cellulari
+ * scritti nel file) e gli orari vengono sostituiti da quelli passati.
  */
 class ImportRoster extends Command
 {
@@ -68,6 +70,8 @@ class ImportRoster extends Command
                     ['first_name' => $row['nome'], 'last_name' => $row['cognome'], 'birth_year' => $row['anno']],
                     ['squad_role' => SquadRole::Titolare],
                 );
+                // Una cella vuota non cancella un cellulare già salvato.
+                $player->update(array_filter(['phone' => $row['cellulare1'], 'phone_2' => $row['cellulare2']]));
                 $added += $player->wasRecentlyCreated ? 1 : 0;
             }
 
@@ -85,7 +89,7 @@ class ImportRoster extends Command
     }
 
     /**
-     * @return list<array{cognome: string, nome: string, anno: int}>|null
+     * @return list<array{cognome: string, nome: string, anno: int, cellulare1: ?string, cellulare2: ?string}>|null
      */
     private function readCsv(string $path): ?array
     {
@@ -124,11 +128,22 @@ class ImportRoster extends Command
 
                 return null;
             }
+            $phones = [];
+            foreach (['cellulare1', 'cellulare2'] as $column) {
+                $phone = preg_replace('/\s+/', ' ', $row[$column] ?? '');
+                if ($phone !== '' && ! preg_match('/^\+?[\d .\/-]{6,30}$/', $phone)) {
+                    $this->error('Riga '.($i + 2)." non valida: \"{$column}\" deve essere un numero, es. 333 123 4567.");
+
+                    return null;
+                }
+                $phones[$column] = $phone === '' ? null : $phone;
+            }
+
             $rows[] = [
-                'cognome' => Str::title(Str::lower($row['cognome'])),
-                'nome' => Str::title(Str::lower($row['nome'])),
+                'cognome' => Player::properName($row['cognome']),
+                'nome' => Player::properName($row['nome']),
                 'anno' => (int) $row['anno'],
-            ];
+            ] + $phones;
         }
 
         return $rows;

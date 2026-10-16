@@ -30,6 +30,16 @@
                 <input id="shirt_number" type="number" inputmode="numeric" name="shirt_number" min="1" max="99" value="{{ old('shirt_number', $player->shirt_number) }}" @error('shirt_number') aria-invalid="true" @enderror>
                 @include('partials.error', ['field' => 'shirt_number'])
             </div>
+            <div>
+                <label for="phone">Cellulare</label>
+                <input id="phone" type="tel" inputmode="tel" name="phone" maxlength="30" value="{{ old('phone', $player->phone) }}" autocomplete="off" @error('phone') aria-invalid="true" @enderror>
+                @include('partials.error', ['field' => 'phone'])
+            </div>
+            <div>
+                <label for="phone_2">Secondo cellulare</label>
+                <input id="phone_2" type="tel" inputmode="tel" name="phone_2" maxlength="30" value="{{ old('phone_2', $player->phone_2) }}" autocomplete="off" @error('phone_2') aria-invalid="true" @enderror>
+                @include('partials.error', ['field' => 'phone_2'])
+            </div>
         </div>
 
         <span class="legend">Posizione in rosa *</span>

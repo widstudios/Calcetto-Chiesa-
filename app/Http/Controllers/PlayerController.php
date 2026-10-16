@@ -65,6 +65,8 @@ class PlayerController extends Controller
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'birth_year' => ['required', 'integer', 'min:1940', 'max:'.now()->year],
+            'phone' => ['nullable', 'string', 'max:30', 'regex:/^\+?[\d .\/-]{6,}$/'],
+            'phone_2' => ['nullable', 'string', 'max:30', 'regex:/^\+?[\d .\/-]{6,}$/'],
             'shirt_number' => [
                 'nullable', 'integer', 'min:1', 'max:99',
                 Rule::unique('players')->where('team_id', $team->id)->ignore($player),
@@ -72,6 +74,8 @@ class PlayerController extends Controller
             'squad_role' => ['required', Rule::enum(SquadRole::class)],
         ], [
             'shirt_number.unique' => 'Questo numero di maglia è già usato in squadra.',
+            'phone.regex' => 'Scrivi solo il numero, es. 333 123 4567.',
+            'phone_2.regex' => 'Scrivi solo il numero, es. 333 123 4567.',
         ]);
     }
 }
