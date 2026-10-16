@@ -5,7 +5,9 @@ use App\Http\Controllers\Admin\GameController;
 use App\Http\Controllers\Admin\GameSheetController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\TournamentController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CallupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PlayerController;
@@ -34,6 +36,17 @@ Route::middleware('auth')->group(function () {
         Route::resource('teams.players', PlayerController::class)->except(['index', 'show']);
         Route::resource('teams.trainings', TrainingController::class)->only(['store', 'destroy']);
     });
+
+    // Appello degli allenamenti e distinte di gara: l'allenatore per le sue squadre, l'admin per tutte.
+    Route::get('presenze', [AttendanceController::class, 'index'])->name('attendances.index');
+    Route::get('teams/{team}/presenze', [AttendanceController::class, 'show'])->name('teams.attendances.show');
+    Route::get('teams/{team}/presenze/appello', [AttendanceController::class, 'edit'])->name('teams.attendances.edit');
+    Route::put('teams/{team}/presenze/appello', [AttendanceController::class, 'update'])->name('teams.attendances.update');
+    Route::delete('teams/{team}/presenze/appello', [AttendanceController::class, 'destroy'])->name('teams.attendances.destroy');
+    Route::get('distinte', [CallupController::class, 'index'])->name('callups.index');
+    Route::get('games/{game}/distinta/{team}', [CallupController::class, 'edit'])->name('games.callups.edit');
+    Route::put('games/{game}/distinta/{team}', [CallupController::class, 'update'])->name('games.callups.update');
+    Route::get('games/{game}/distinta/{team}/stampa', [CallupController::class, 'print'])->name('games.callups.print');
 
     Route::middleware('role:admin')->group(function () {
         Route::resource('tournaments', TournamentController::class)->except('show');

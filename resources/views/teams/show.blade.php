@@ -12,6 +12,7 @@
         <div class="actions">
             @can('manageRoster', $team)
                 <a class="btn" href="{{ route('teams.players.create', $team) }}"><x-icon name="plus" /> Aggiungi calciatore</a>
+                <a class="btn secondary" href="{{ route('teams.attendances.show', $team) }}"><x-icon name="checklist" /> Presenze</a>
             @endcan
             @can('update', $team)
                 <a class="btn secondary" href="{{ route('teams.edit', $team) }}"><x-icon name="pencil" /> Modifica squadra</a>
