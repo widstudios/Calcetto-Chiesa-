@@ -54,7 +54,7 @@ class AttendanceCallupTest extends TestCase
         ])->assertRedirect();
         $this->assertSame(2, Attendance::count());
         $this->put(route('teams.attendances.update', $this->team), [
-            'data' => '2026-10-15',
+            'data' => '2026-10-07',
             'players' => [$marco->id => '1', $paolo->id => '0'],
         ]);
 
@@ -63,24 +63,39 @@ class AttendanceCallupTest extends TestCase
             ->assertSee('1 presenti su 2')
             ->assertSee('50%');
 
-        $this->delete(route('teams.attendances.destroy', $this->team), ['data' => '2026-10-15'])->assertRedirect();
+        $this->delete(route('teams.attendances.destroy', $this->team), ['data' => '2026-10-07'])->assertRedirect();
         $this->assertSame(2, Attendance::count());
+    }
+
+    public function test_roll_call_only_on_scheduled_training_days(): void
+    {
+        $this->team->trainings()->create(['weekday' => 3, 'field' => 'Oratorio', 'starts_at' => '18:00', 'ends_at' => '19:30']);
+        $player = Player::factory()->for($this->team)->create();
+
+        // Giovedì 15: nessun allenamento in calendario, la data non si può usare.
+        $this->actingAs($this->coach)->get(route('teams.attendances.edit', [$this->team, 'data' => '2026-10-15']))->assertSessionHasErrors('data');
+        $this->put(route('teams.attendances.update', $this->team), ['data' => '2026-10-15', 'players' => [$player->id => '1']])->assertSessionHasErrors('data');
+        $this->assertSame(0, Attendance::count());
+
+        // Più vecchio di quattro settimane: non in elenco ma comunque un mercoledì di allenamento.
+        $this->get(route('teams.attendances.show', $this->team))->assertSee('Mercoledì 23 settembre 2026')->assertDontSee('Mercoledì 16 settembre 2026');
     }
 
     public function test_roll_call_rejects_future_dates_and_other_teams(): void
     {
+        $this->team->trainings()->create(['weekday' => 5, 'field' => 'Oratorio', 'starts_at' => '18:00', 'ends_at' => '19:30']);
         $player = Player::factory()->for($this->team)->create();
         $other = Player::factory()->create();
 
         $this->actingAs($this->coach)
-            ->put(route('teams.attendances.update', $this->team), ['data' => '2026-10-20', 'players' => [$player->id => '1']])
+            ->put(route('teams.attendances.update', $this->team), ['data' => '2026-10-23', 'players' => [$player->id => '1']])
             ->assertSessionHasErrors('data');
 
         $this->put(route('teams.attendances.update', $this->team), ['data' => '2026-10-16', 'players' => [$player->id => '1', $other->id => '0']]);
         $this->assertSame([$player->id], Attendance::pluck('player_id')->all());
 
         $this->get(route('teams.attendances.show', $other->team))->assertForbidden();
-        $this->put(route('teams.attendances.update', $other->team), ['data' => '2026-10-16', 'players' => [$other->id => '1']])->assertForbidden();
+        $this->put(route('teams.attendances.update', $other->team), ['data' => '2026-10-14', 'players' => [$other->id => '1']])->assertForbidden();
     }
 
     public function test_coach_fills_and_prints_callup(): void

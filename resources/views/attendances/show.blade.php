@@ -10,7 +10,7 @@
             <h2><x-icon name="checklist" /> Appelli</h2>
             <span class="badge">{{ $sessions->whereNotNull('total')->count() }} fatti</span>
         </div>
-        <p class="hint" style="padding: 0 20px">Qui trovi gli allenamenti delle ultime tre settimane in base agli orari della squadra. Per un allenamento in un altro giorno scegli la data qui sotto.</p>
+        <p class="hint" style="padding: 0 20px">Qui trovi gli allenamenti delle ultime quattro settimane, in base agli orari inseriti nella pagina della squadra.</p>
         @if ($sessions->isEmpty())
             <div class="empty"><x-icon name="calendar" /><p>Nessun allenamento recente. {{ $team->trainings->isEmpty() ? 'Aggiungi gli orari di allenamento nella pagina della squadra.' : '' }}</p></div>
         @else
@@ -41,18 +41,7 @@
                 @endforeach
             </ul>
         @endif
-        <form method="GET" action="{{ route('teams.attendances.edit', $team) }}" style="padding: 0 20px 20px">
-            <div class="grid">
-                <div>
-                    <label for="data">Appello per un'altra data</label>
-                    <input id="data" type="date" name="data" value="{{ $today->toDateString() }}" max="{{ $today->toDateString() }}" required>
-                    @include('partials.error', ['field' => 'data'])
-                </div>
-                <div style="display: flex; align-items: flex-end">
-                    <button class="btn secondary" type="submit"><x-icon name="checklist" /> Apri appello</button>
-                </div>
-            </div>
-        </form>
+        @error('data')<div style="padding: 0 20px 16px">@include('partials.error', ['field' => 'data'])</div>@enderror
     </section>
 
     <section class="card flush">

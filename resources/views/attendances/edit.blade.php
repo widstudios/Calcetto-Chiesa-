@@ -13,15 +13,11 @@
         @csrf
         @method('PUT')
         <input type="hidden" name="data" value="{{ $date->toDateString() }}">
-        @if ($trainings->isNotEmpty())
-            <p class="hint" style="margin-top: 0">
-                @foreach ($trainings as $training)
-                    <x-icon name="clock" /> Allenamento {{ $training->timeRange() }}, campo {{ $training->field }}@if (! $loop->last)<br>@endif
-                @endforeach
-            </p>
-        @else
-            <p class="hint" style="margin-top: 0">In questo giorno non c'è un allenamento in calendario: l'appello vale comunque.</p>
-        @endif
+        <p class="hint" style="margin-top: 0">
+            @foreach ($trainings as $training)
+                <x-icon name="clock" /> Allenamento {{ $training->timeRange() }}, campo {{ $training->field }}@if (! $loop->last)<br>@endif
+            @endforeach
+        </p>
         <p class="hint">{{ $saved->isEmpty() ? 'Sono tutti segnati presenti: tocca "Assente" per chi manca.' : 'Appello già fatto: puoi correggerlo.' }}</p>
         @include('partials.error', ['field' => 'players'])
 
