@@ -32,7 +32,7 @@
             </div>
             <div>
                 <label for="phone">Cellulare</label>
-                <input id="phone" type="tel" inputmode="tel" name="phone" maxlength="30" value="{{ old('phone', $player->phone) }}" autocomplete="off" @error('phone') aria-invalid="true" @enderror>
+                <input id="phone" type="tel" inputmode="tel" name="phone" maxlength="30" placeholder="es. 333 123 4567" value="{{ old('phone', $player->phone) }}" autocomplete="off" @error('phone') aria-invalid="true" @enderror>
                 @include('partials.error', ['field' => 'phone'])
             </div>
             <div>
