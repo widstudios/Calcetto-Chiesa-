@@ -9,8 +9,8 @@
 </head>
 <body class="print-page">
     <div class="print-toolbar no-print">
-        <a class="btn small secondary" href="{{ route('callups.index', ['tournament' => $game->tournament_id]) }}"><x-icon name="back" /> Distinte</a>
-        <a class="btn small secondary" href="{{ route('games.callups.edit', [$game, $team]) }}"><x-icon name="pencil" /> Modifica</a>
+        <a class="btn small secondary" href="{{ route('teams.lineups.index', $team) }}"><x-icon name="back" /> Distinte</a>
+        <a class="btn small secondary" href="{{ route('teams.lineups.edit', [$team, $lineup]) }}"><x-icon name="pencil" /> Modifica</a>
         <button class="btn small" type="button" onclick="window.print()"><x-icon name="printer" /> Stampa</button>
     </div>
     @if (session('status'))
@@ -19,13 +19,16 @@
 
     <article class="distinta">
         <header>
-            <p class="distinta-tournament">{{ $game->tournament->name }}@if ($game->matchday) · {{ $game->matchday }}ª giornata @endif</p>
+            @php($game = $lineup->game)
+            @if ($game)
+                <p class="distinta-tournament">{{ $game->tournament->name }}@if ($game->matchday) · {{ $game->matchday }}ª giornata @endif</p>
+            @endif
             <h1>Distinta di gara</h1>
-            <p class="distinta-match">{{ $game->homeTeam->name }} – {{ $game->awayTeam->name }}</p>
+            <p class="distinta-match">{{ $lineup->title() }}</p>
             <dl class="distinta-info">
                 <div><dt>Squadra</dt><dd>{{ $team->name }}</dd></div>
-                <div><dt>Data e ora</dt><dd>{{ $game->kickoff_at?->format('d/m/Y H:i') ?? '________________' }}</dd></div>
-                <div><dt>Campo</dt><dd>{{ $game->venue ?: '________________' }}</dd></div>
+                <div><dt>Data e ora</dt><dd>{{ $lineup->kickoff_at?->format('d/m/Y H:i') ?? '________________' }}</dd></div>
+                <div><dt>Campo</dt><dd>{{ $lineup->venue ?: '________________' }}</dd></div>
             </dl>
         </header>
 
@@ -34,12 +37,12 @@
                 <tr><th class="num">N°</th><th>Cognome e nome</th><th class="num">Anno</th><th></th><th>Documento</th></tr>
             </thead>
             <tbody>
-                @forelse ($callups as $callup)
+                @forelse ($players as $row)
                     <tr>
-                        <td class="num">{{ $callup->shirt_number }}</td>
-                        <td>{{ $callup->player->last_name }} {{ $callup->player->first_name }}</td>
-                        <td class="num">{{ $callup->player->birth_year }}</td>
-                        <td class="num">{{ match ($callup->captain) { App\Models\Callup::CAPTAIN => 'C', App\Models\Callup::VICE => 'VC', default => '' } }}</td>
+                        <td class="num">{{ $row->shirt_number }}</td>
+                        <td>{{ $row->player->last_name }} {{ $row->player->first_name }}</td>
+                        <td class="num">{{ $row->player->birth_year }}</td>
+                        <td class="num">{{ match ($row->captain) { App\Models\LineupPlayer::CAPTAIN => 'C', App\Models\LineupPlayer::VICE => 'VC', default => '' } }}</td>
                         <td class="write"></td>
                     </tr>
                 @empty
@@ -54,7 +57,7 @@
                 <tr><th>Cognome e nome</th><th>Ruolo</th><th>Documento</th></tr>
             </thead>
             <tbody>
-                @php($coaches = $team->coach_name ? collect([$team->coach_name]) : $team->coaches->pluck('name'))
+                @php($coaches = $lineup->team->coach_name ? collect([$lineup->team->coach_name]) : $lineup->team->coaches->pluck('name'))
                 @foreach ($coaches as $coach)
                     <tr><td>{{ $coach }}</td><td>Allenatore</td><td class="write"></td></tr>
                 @endforeach

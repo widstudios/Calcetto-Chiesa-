@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -16,7 +17,7 @@ use Illuminate\View\View;
 class AttendanceController extends Controller
 {
     /** Giorni all'indietro in cui proporre gli allenamenti in calendario. */
-    private const RECENT_DAYS = 21;
+    private const RECENT_DAYS = 27;
 
     public function index(Request $request): View|RedirectResponse
     {
@@ -44,7 +45,7 @@ class AttendanceController extends Controller
         $attendances = $team->attendances()->get();
         $byDate = $attendances->groupBy(fn ($a) => $a->date->toDateString());
 
-        // Allenamenti in calendario delle ultime settimane, più tutte le date con un appello già fatto.
+        // Allenamenti in calendario delle ultime quattro settimane, più le date con un appello già fatto.
         $today = CarbonImmutable::today();
         $dates = collect(range(0, self::RECENT_DAYS))
             ->map(fn (int $days) => $today->subDays($days))
@@ -64,7 +65,6 @@ class AttendanceController extends Controller
                 'total' => $byDate->get($date)?->count(),
             ]),
             'summary' => $this->summary($team, $attendances),
-            'today' => $today,
         ]);
     }
 
@@ -72,7 +72,7 @@ class AttendanceController extends Controller
     {
         Gate::authorize('manageRoster', $team);
 
-        $date = $this->date($request);
+        $date = $this->date($request, $team);
         $team->load(['tournament', 'trainings', 'players' => fn ($q) => $q->orderBy('last_name')->orderBy('first_name')]);
         $saved = $team->attendances()->whereDate('date', $date)->get()->keyBy('player_id');
 
@@ -88,7 +88,7 @@ class AttendanceController extends Controller
     {
         Gate::authorize('manageRoster', $team);
 
-        $date = $this->date($request);
+        $date = $this->date($request, $team);
         $playerIds = $team->players()->pluck('id');
         $data = $request->validate([
             'players' => ['required', 'array'],
@@ -118,7 +118,7 @@ class AttendanceController extends Controller
     {
         Gate::authorize('manageRoster', $team);
 
-        $date = $this->date($request);
+        $date = $this->date($request, $team, scheduled: false);
         $team->attendances()->whereDate('date', $date)->delete();
 
         return redirect()->route('teams.attendances.show', $team)
@@ -126,9 +126,9 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Data dell'appello, dal campo "data": non nel futuro.
+     * Data dell'appello, dal campo "data": non nel futuro e in un giorno di allenamento della squadra.
      */
-    private function date(Request $request): CarbonImmutable
+    private function date(Request $request, Team $team, bool $scheduled = true): CarbonImmutable
     {
         $request->validate([
             'data' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
@@ -138,7 +138,17 @@ class AttendanceController extends Controller
             'data.before_or_equal' => 'Non puoi fare l\'appello di un allenamento futuro.',
         ]);
 
-        return CarbonImmutable::createFromFormat('!Y-m-d', $request->input('data'));
+        $date = CarbonImmutable::createFromFormat('!Y-m-d', $request->input('data'));
+
+        // Niente date inventate: l'appello si fa solo nei giorni degli allenamenti inseriti
+        // (un appello già salvato resta modificabile anche se poi l'orario è stato tolto).
+        if ($scheduled && $team->trainingsOn($date)->isEmpty() && ! $team->attendances()->whereDate('date', $date)->exists()) {
+            throw ValidationException::withMessages([
+                'data' => 'In questo giorno la squadra non ha allenamenti in calendario.',
+            ]);
+        }
+
+        return $date;
     }
 
     /**
