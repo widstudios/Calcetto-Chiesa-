@@ -7,34 +7,31 @@
 
     <section class="card flush">
         <div class="card-head">
-            <h2><x-icon name="checklist" /> Appelli</h2>
-            <span class="badge">{{ $sessions->whereNotNull('total')->count() }} fatti</span>
+            <h2><x-icon name="checklist" /> Appello</h2>
+            <span class="badge">{{ $team->trainings->count() }} a settimana</span>
         </div>
-        <p class="hint" style="padding: 0 20px">Qui trovi gli allenamenti delle ultime quattro settimane, in base agli orari inseriti nella pagina della squadra.</p>
-        @if ($sessions->isEmpty())
-            <div class="empty"><x-icon name="calendar" /><p>Nessun allenamento recente. {{ $team->trainings->isEmpty() ? 'Aggiungi gli orari di allenamento nella pagina della squadra.' : '' }}</p></div>
+        @if ($trainings->isEmpty())
+            <div class="empty"><x-icon name="calendar" /><p>Nessun orario di allenamento. Aggiungilo nella pagina della squadra per fare l'appello.</p></div>
         @else
             <ul class="list" style="margin-top: 8px">
-                @foreach ($sessions as $session)
-                    @php($done = $session->total !== null)
+                @foreach ($trainings as $row)
                     <li class="list-item">
-                        <span @class(['shirt', 'none' => ! $done]) aria-hidden="true"><x-icon :name="$done ? 'check' : 'clock'" /></span>
+                        <span @class(['shirt', 'none' => ! $row->done]) aria-hidden="true"><x-icon :name="$row->done ? 'check' : 'calendar'" /></span>
                         <div class="list-main">
-                            <div class="list-title">{{ ucfirst($session->date->locale('it')->isoFormat('dddd D MMMM YYYY')) }}</div>
+                            <div class="list-title">{{ $row->slots->first()->weekdayName() }} · {{ $row->slots->map->timeRange()->join(', ') }}</div>
                             <div class="list-meta">
-                                @foreach ($session->trainings as $training)
-                                    <span><x-icon name="clock" /> {{ $training->timeRange() }} · {{ $training->field }}</span>
-                                @endforeach
-                                @if ($done)
-                                    <span class="badge">{{ $session->present }} presenti su {{ $session->total }}</span>
+                                <span>Campo: {{ $row->slots->pluck('field')->unique()->join(', ') }}</span>
+                                <span>{{ $row->date->isToday() ? 'Oggi' : $row->date->format('d/m/Y') }}</span>
+                                @if ($row->done)
+                                    <span class="badge">{{ $row->done->present }} presenti su {{ $row->done->total }}</span>
                                 @else
                                     <span class="badge gold">Appello da fare</span>
                                 @endif
                             </div>
                         </div>
                         <div class="actions">
-                            <a @class(['btn small', 'secondary' => $done]) href="{{ route('teams.attendances.edit', [$team, 'data' => $session->date->toDateString()]) }}">
-                                <x-icon :name="$done ? 'pencil' : 'checklist'" /> <span class="btn-text">{{ $done ? 'Modifica' : 'Fai appello' }}</span>
+                            <a @class(['btn small', 'secondary' => $row->done]) href="{{ route('teams.attendances.edit', [$team, 'data' => $row->date->toDateString()]) }}">
+                                <x-icon :name="$row->done ? 'pencil' : 'checklist'" /> <span class="btn-text">{{ $row->done ? 'Modifica' : 'Fai appello' }}</span>
                             </a>
                         </div>
                     </li>
@@ -43,6 +40,29 @@
         @endif
         @error('data')<div style="padding: 0 20px 16px">@include('partials.error', ['field' => 'data'])</div>@enderror
     </section>
+
+    @if ($history->isNotEmpty())
+        <section class="card flush">
+            <div class="card-head">
+                <h2>Appelli fatti</h2>
+                <span class="badge">{{ $history->count() }}</span>
+            </div>
+            <ul class="list" style="margin-top: 8px">
+                @foreach ($history as $row)
+                    <li class="list-item">
+                        <span class="shirt" aria-hidden="true"><x-icon name="check" /></span>
+                        <div class="list-main">
+                            <div class="list-title">{{ ucfirst($row->date->locale('it')->isoFormat('dddd D MMMM YYYY')) }}</div>
+                            <div class="list-meta"><span class="badge">{{ $row->done->present }} presenti su {{ $row->done->total }}</span></div>
+                        </div>
+                        <div class="actions">
+                            <a class="btn small secondary" href="{{ route('teams.attendances.edit', [$team, 'data' => $row->date->toDateString()]) }}"><x-icon name="pencil" /> <span class="btn-text">Modifica</span></a>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
 
     <section class="card flush">
         <div class="card-head">

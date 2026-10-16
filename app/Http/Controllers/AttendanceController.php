@@ -16,9 +16,6 @@ use Illuminate\View\View;
  */
 class AttendanceController extends Controller
 {
-    /** Giorni all'indietro in cui proporre gli allenamenti in calendario. */
-    private const RECENT_DAYS = 27;
-
     public function index(Request $request): View|RedirectResponse
     {
         $user = $request->user();
@@ -45,25 +42,23 @@ class AttendanceController extends Controller
         $attendances = $team->attendances()->get();
         $byDate = $attendances->groupBy(fn ($a) => $a->date->toDateString());
 
-        // Allenamenti in calendario delle ultime quattro settimane, più le date con un appello già fatto.
+        // Un appello per ogni giorno di allenamento inserito: l'ultimo in cui c'è stato (oggi compreso).
         $today = CarbonImmutable::today();
-        $dates = collect(range(0, self::RECENT_DAYS))
-            ->map(fn (int $days) => $today->subDays($days))
-            ->filter(fn (CarbonImmutable $date) => $team->trainingsOn($date)->isNotEmpty())
-            ->map->toDateString()
-            ->merge($byDate->keys())
-            ->unique()
-            ->sortDesc()
-            ->values();
+        $count = fn (?Collection $rows) => $rows ? (object) ['present' => $rows->where('present', true)->count(), 'total' => $rows->count()] : null;
 
         return view('attendances.show', [
             'team' => $team,
-            'sessions' => $dates->map(fn (string $date) => (object) [
+            // Due orari nello stesso giorno sono un solo appello: le presenze si segnano per data.
+            'trainings' => $team->trainings->groupBy('weekday')->map(function ($slots, $weekday) use ($today, $byDate, $count) {
+                $date = $today->subDays(($today->dayOfWeekIso - $weekday + 7) % 7);
+
+                return (object) ['slots' => $slots, 'date' => $date, 'done' => $count($byDate->get($date->toDateString()))];
+            })->values(),
+            // Appelli già fatti, dal più recente.
+            'history' => $byDate->sortKeysDesc()->map(fn ($rows, $date) => (object) [
                 'date' => CarbonImmutable::parse($date),
-                'trainings' => $team->trainingsOn(CarbonImmutable::parse($date)),
-                'present' => $byDate->get($date)?->where('present', true)->count(),
-                'total' => $byDate->get($date)?->count(),
-            ]),
+                'done' => $count($rows),
+            ])->values(),
             'summary' => $this->summary($team, $attendances),
         ]);
     }
