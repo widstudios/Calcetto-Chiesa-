@@ -46,6 +46,10 @@ class SettingController extends Controller
             // Nome sempre nuovo, così browser e telefoni non mostrano il logo vecchio dalla cache.
             $file = $request->file('logo');
             $path = $disk->putFileAs('', $file, 'logo-'.Str::lower(Str::random(10)).'.'.$file->extension());
+            if (! $path) {
+                // Cartella non scrivibile o disco pieno: il logo attuale resta com'è.
+                return back()->withInput()->withErrors(['logo' => 'Non sono riuscito a salvare il logo sul server. Controlla i permessi della cartella public/uploads.']);
+            }
             Setting::put('logo', $path);
         } elseif ($request->boolean('remove_logo')) {
             Setting::put('logo', null);

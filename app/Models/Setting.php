@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Impostazioni del sito (nome e logo) salvate dall'amministratore.
@@ -59,6 +58,7 @@ class Setting extends Model
     {
         $path = self::get('logo');
 
-        return $path ? Storage::disk('uploads')->url($path) : null;
+        // asset() tiene conto dell'indirizzo con cui si apre il sito, anche se è in una sottocartella.
+        return $path ? asset('uploads/'.$path) : null;
     }
 }
