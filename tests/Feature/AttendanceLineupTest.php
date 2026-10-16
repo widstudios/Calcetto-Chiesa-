@@ -80,6 +80,10 @@ class AttendanceLineupTest extends TestCase
         $this->put(route('teams.attendances.update', $this->team), ['data' => '2026-10-15', 'players' => [$player->id => '1']])->assertSessionHasErrors('data');
         $this->assertSame(0, Attendance::count());
 
+        // Due orari nello stesso giorno: un solo appello per quella data.
+        $this->team->trainings()->create(['weekday' => 3, 'field' => 'Palestra', 'starts_at' => '20:00', 'ends_at' => '21:00']);
+        $this->get(route('teams.attendances.show', $this->team))->assertSee('Mercoledì · 18:00 - 19:30, 20:00 - 21:00')->assertSee('Oratorio, Palestra');
+
         // Nessun altro giorno in elenco: solo l'allenamento inserito.
         $this->get(route('teams.attendances.show', $this->team))->assertSee('14/10/2026')->assertSee('Mercoledì · 18:00 - 19:30')->assertDontSee('Giovedì');
     }

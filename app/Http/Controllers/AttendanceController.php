@@ -42,17 +42,18 @@ class AttendanceController extends Controller
         $attendances = $team->attendances()->get();
         $byDate = $attendances->groupBy(fn ($a) => $a->date->toDateString());
 
-        // Un appello per ogni allenamento inserito: l'ultimo giorno in cui c'è stato (oggi compreso).
+        // Un appello per ogni giorno di allenamento inserito: l'ultimo in cui c'è stato (oggi compreso).
         $today = CarbonImmutable::today();
         $count = fn (?Collection $rows) => $rows ? (object) ['present' => $rows->where('present', true)->count(), 'total' => $rows->count()] : null;
 
         return view('attendances.show', [
             'team' => $team,
-            'trainings' => $team->trainings->map(function ($training) use ($today, $byDate, $count) {
-                $date = $today->subDays(($today->dayOfWeekIso - $training->weekday + 7) % 7);
+            // Due orari nello stesso giorno sono un solo appello: le presenze si segnano per data.
+            'trainings' => $team->trainings->groupBy('weekday')->map(function ($slots, $weekday) use ($today, $byDate, $count) {
+                $date = $today->subDays(($today->dayOfWeekIso - $weekday + 7) % 7);
 
-                return (object) ['training' => $training, 'date' => $date, 'done' => $count($byDate->get($date->toDateString()))];
-            }),
+                return (object) ['slots' => $slots, 'date' => $date, 'done' => $count($byDate->get($date->toDateString()))];
+            })->values(),
             // Appelli già fatti, dal più recente.
             'history' => $byDate->sortKeysDesc()->map(fn ($rows, $date) => (object) [
                 'date' => CarbonImmutable::parse($date),
