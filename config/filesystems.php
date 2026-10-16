@@ -47,6 +47,17 @@ return [
             'report' => false,
         ],
 
+        // Logo e altri file caricati dal pannello: stanno dentro public/, così si vedono
+        // anche su hosting condivisi dove "php artisan storage:link" non è possibile.
+        'uploads' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'url' => '/uploads',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

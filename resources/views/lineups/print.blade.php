@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
-    <title>Distinta {{ $team->name }} · {{ config('app.name') }}</title>
+    <title>Distinta {{ $team->name }} · {{ \App\Models\Setting::siteName() }}</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ @filemtime(public_path('css/app.css')) }}">
 </head>
 <body class="print-page">
@@ -19,6 +19,9 @@
 
     <article class="distinta">
         <header>
+            @if ($logo = \App\Models\Setting::logoUrl())
+                <img class="distinta-logo" src="{{ $logo }}" alt="">
+            @endif
             @php($game = $lineup->game)
             @if ($game)
                 <p class="distinta-tournament">{{ $game->tournament->name }}@if ($game->matchday) · {{ $game->matchday }}ª giornata @endif</p>

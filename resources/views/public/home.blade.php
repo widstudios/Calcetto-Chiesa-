@@ -8,7 +8,7 @@
         <div @class(['hero-inner', 'has-next' => $next])>
             <div class="hero-main">
                 <span class="eyebrow">{{ $tournament?->season ? 'Stagione '.$tournament->season : 'Torneo di calcetto' }}</span>
-                <h1>{{ $tournament?->name ?? config('app.name') }}</h1>
+                <h1>{{ $tournament?->name ?? \App\Models\Setting::siteName() }}</h1>
                 @if ($tournaments->count() > 1)
                     <form class="hero-select" method="GET" action="{{ route('home') }}">
                         <label class="sr-only" for="torneo">Scegli il torneo</label>
