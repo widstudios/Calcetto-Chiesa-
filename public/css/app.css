@@ -583,8 +583,6 @@ table.sheet input[type=radio] { width: 22px; height: 22px; accent-color: var(--a
 @media (max-width: 420px) { .toggle label { padding: 0 10px; } }
 
 /* ---------- Distinte di gara ---------- */
-.callup-game + .callup-game { border-top: 1px solid var(--line); }
-.callup-game .game-bottom { margin-top: 0; padding: 0 20px 16px; }
 .callup-sheet .inline-check { font-weight: 600; }
 .callup-sheet .inline-check input { flex: none; }
 
@@ -604,6 +602,7 @@ table.sheet input[type=radio] { width: 22px; height: 22px; accent-color: var(--a
 .distinta-table th, .distinta-table td { border: 1px solid #000; padding: 6px 8px; color: #000; background: #fff; font-size: .9375rem; }
 .distinta-table th { text-transform: none; letter-spacing: 0; font-weight: 700; }
 .distinta-table tbody tr:hover td { background: #fff; }
+.distinta-table tbody tr:last-child td { border-bottom: 1px solid #000; }
 .distinta-table .num { text-align: center; width: 1%; white-space: nowrap; }
 .distinta-table td.write { min-width: 120px; height: 30px; }
 .distinta-sign { display: flex; gap: 32px; margin-top: 48px; }

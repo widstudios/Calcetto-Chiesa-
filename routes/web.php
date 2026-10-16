@@ -7,8 +7,8 @@ use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\CallupController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LineupController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PublicController;
@@ -43,10 +43,16 @@ Route::middleware('auth')->group(function () {
     Route::get('teams/{team}/presenze/appello', [AttendanceController::class, 'edit'])->name('teams.attendances.edit');
     Route::put('teams/{team}/presenze/appello', [AttendanceController::class, 'update'])->name('teams.attendances.update');
     Route::delete('teams/{team}/presenze/appello', [AttendanceController::class, 'destroy'])->name('teams.attendances.destroy');
-    Route::get('distinte', [CallupController::class, 'index'])->name('callups.index');
-    Route::get('games/{game}/distinta/{team}', [CallupController::class, 'edit'])->name('games.callups.edit');
-    Route::put('games/{game}/distinta/{team}', [CallupController::class, 'update'])->name('games.callups.update');
-    Route::get('games/{game}/distinta/{team}/stampa', [CallupController::class, 'print'])->name('games.callups.print');
+    Route::get('distinte', [LineupController::class, 'index'])->name('lineups.index');
+    Route::scopeBindings()->prefix('teams/{team}/distinte')->name('teams.lineups.')->controller(LineupController::class)->group(function () {
+        Route::get('/', 'teamIndex')->name('index');
+        Route::get('nuova', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('{lineup}', 'edit')->name('edit');
+        Route::put('{lineup}', 'update')->name('update');
+        Route::delete('{lineup}', 'destroy')->name('destroy');
+        Route::get('{lineup}/stampa', 'print')->name('print');
+    });
 
     Route::middleware('role:admin')->group(function () {
         Route::resource('tournaments', TournamentController::class)->except('show');

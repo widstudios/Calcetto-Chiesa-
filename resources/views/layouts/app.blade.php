@@ -20,14 +20,14 @@
                 ['coaches.index', 'coaches.*', 'Allenatori', 'coach'],
                 ['games.index', ['games.index', 'games.create', 'games.edit', 'games.sheet.*'], 'Calendario', 'calendar'],
                 ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
-                ['callups.index', ['callups.*', 'games.callups.*'], 'Distinte', 'clipboard'],
+                ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
                 ['imports.index', 'imports.*', 'Importa', 'upload'],
             ]
             : [
                 ['dashboard', 'dashboard', 'Home', 'home'],
                 ['teams.index', ['teams.index', 'teams.show', 'teams.players.*'], 'La mia rosa', 'shirt'],
                 ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
-                ['callups.index', ['callups.*', 'games.callups.*'], 'Distinte', 'clipboard'],
+                ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
             ];
     @endphp
     <body @class(['has-nav', 'nav-wide' => count($navItems) > 6])>

@@ -4,8 +4,9 @@ namespace Tests\Feature;
 
 use App\Enums\SquadRole;
 use App\Models\Attendance;
-use App\Models\Callup;
 use App\Models\Game;
+use App\Models\Lineup;
+use App\Models\LineupPlayer;
 use App\Models\Player;
 use App\Models\Team;
 use App\Models\User;
@@ -13,7 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
-class AttendanceCallupTest extends TestCase
+class AttendanceLineupTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -98,18 +99,19 @@ class AttendanceCallupTest extends TestCase
         $this->put(route('teams.attendances.update', $other->team), ['data' => '2026-10-14', 'players' => [$other->id => '1']])->assertForbidden();
     }
 
-    public function test_coach_fills_and_prints_callup(): void
+    public function test_coach_makes_lineup_without_a_game(): void
     {
-        $game = Game::factory()->create(['home_team_id' => $this->team->id, 'tournament_id' => $this->team->tournament_id, 'kickoff_at' => '2026-10-18 10:00']);
         $starter = Player::factory()->for($this->team)->create(['first_name' => 'Marco', 'last_name' => 'Verdi', 'shirt_number' => 10, 'squad_role' => SquadRole::Titolare]);
         $bench = Player::factory()->for($this->team)->create(['first_name' => 'Paolo', 'last_name' => 'Neri', 'shirt_number' => 12, 'squad_role' => SquadRole::Panchina]);
         $left = Player::factory()->for($this->team)->create(['last_name' => 'Escluso', 'squad_role' => SquadRole::Panchina]);
 
-        $this->actingAs($this->coach)->get(route('callups.index'))->assertOk()->assertSee('Distinta '.$this->team->name)
-            ->assertDontSee(route('games.callups.edit', [$game, $game->awayTeam]));
-        $this->get(route('games.callups.edit', [$game, $this->team]))->assertOk()->assertSee('Marco Verdi');
+        $this->actingAs($this->coach)->get(route('lineups.index'))->assertRedirect(route('teams.lineups.index', $this->team));
+        $this->get(route('teams.lineups.index', $this->team))->assertOk()->assertSee('Nessuna distinta');
+        $this->get(route('teams.lineups.create', $this->team))->assertOk()->assertSee('Marco Verdi');
 
-        $this->put(route('games.callups.update', [$game, $this->team]), [
+        $this->post(route('teams.lineups.store', $this->team), [
+            'kickoff_at' => '2026-10-18T10:00',
+            'opponent' => 'Amici del Lunedì',
             'players' => [
                 $starter->id => ['called' => '1', 'shirt_number' => 10],
                 $bench->id => ['called' => '1', 'shirt_number' => 7],
@@ -117,40 +119,76 @@ class AttendanceCallupTest extends TestCase
             ],
             'captain' => $starter->id,
             'vice' => $bench->id,
-        ])->assertRedirect(route('games.callups.print', [$game, $this->team]));
+        ])->assertRedirect();
 
-        $this->assertSame(2, Callup::count());
-        $this->assertSame(Callup::VICE, Callup::firstWhere('player_id', $bench->id)->captain);
-        $this->get(route('games.callups.print', [$game, $this->team]))->assertOk()
+        $lineup = Lineup::sole();
+        $this->assertNull($lineup->game_id);
+        $this->assertSame(2, $lineup->players()->count());
+        $this->assertSame(LineupPlayer::VICE, $lineup->players()->firstWhere('player_id', $bench->id)->captain);
+        $this->get(route('teams.lineups.print', [$this->team, $lineup]))->assertOk()
+            ->assertSee($this->team->name.' – Amici del Lunedì')
             ->assertSeeInOrder(['Neri Paolo', 'Verdi Marco'])
             ->assertDontSee('Escluso')
             ->assertSee('18/10/2026 10:00');
+
+        // Modifica: Paolo resta fuori.
+        $this->put(route('teams.lineups.update', [$this->team, $lineup]), [
+            'players' => [$starter->id => ['called' => '1', 'shirt_number' => 10]],
+        ])->assertRedirect(route('teams.lineups.print', [$this->team, $lineup]));
+        $this->assertSame([$starter->id], $lineup->players()->pluck('player_id')->all());
+
+        $this->delete(route('teams.lineups.destroy', [$this->team, $lineup]))->assertRedirect(route('teams.lineups.index', $this->team));
+        $this->assertSame(0, Lineup::count());
     }
 
-    public function test_callup_validation(): void
+    public function test_lineup_takes_details_from_the_chosen_game(): void
     {
-        $game = Game::factory()->create(['home_team_id' => $this->team->id, 'tournament_id' => $this->team->tournament_id]);
+        $game = Game::factory()->create(['home_team_id' => $this->team->id, 'tournament_id' => $this->team->tournament_id, 'kickoff_at' => '2026-10-25 09:30', 'venue' => 'Campo parrocchiale']);
+        $player = Player::factory()->for($this->team)->create();
+        $foreign = Game::factory()->create();
+
+        $this->actingAs($this->coach)->post(route('teams.lineups.store', $this->team), [
+            'game_id' => $foreign->id,
+            'players' => [$player->id => ['called' => '1']],
+        ])->assertSessionHasErrors('game_id');
+
+        $this->post(route('teams.lineups.store', $this->team), [
+            'game_id' => $game->id,
+            'players' => [$player->id => ['called' => '1']],
+        ])->assertRedirect();
+
+        $lineup = Lineup::sole();
+        $this->assertSame($game->awayTeam->name, $lineup->opponent);
+        $this->assertSame('Campo parrocchiale', $lineup->venue);
+        $this->get(route('teams.lineups.print', [$this->team, $lineup]))->assertSee('25/10/2026 09:30')->assertSee('1ª giornata');
+    }
+
+    public function test_lineup_validation(): void
+    {
         [$a, $b, $c] = Player::factory()->for($this->team)->count(3)->create();
 
-        $this->actingAs($this->coach)->put(route('games.callups.update', [$game, $this->team]), [
+        $this->actingAs($this->coach)->post(route('teams.lineups.store', $this->team), [
             'players' => [$a->id => ['called' => '1', 'shirt_number' => 9], $b->id => ['called' => '1', 'shirt_number' => 9]],
             'captain' => $c->id,
         ])->assertSessionHasErrors(['players', 'captain']);
 
-        $this->put(route('games.callups.update', [$game, $this->team]), ['players' => []])->assertSessionHasErrors('players');
-        $this->assertSame(0, Callup::count());
+        $this->post(route('teams.lineups.store', $this->team), ['players' => []])->assertSessionHasErrors('players');
+        $this->assertSame(0, Lineup::count());
     }
 
-    public function test_callup_only_for_own_team_in_the_game(): void
+    public function test_lineups_only_for_own_teams(): void
     {
-        $game = Game::factory()->create();
-        $this->actingAs($this->coach)->get(route('games.callups.edit', [$game, $game->homeTeam]))->assertForbidden();
-        $this->get(route('games.callups.edit', [$game, $this->team]))->assertNotFound();
-        $this->get(route('callups.index'))->assertOk()->assertDontSee($game->homeTeam->name);
+        $other = Team::factory()->create();
+        $lineup = $other->lineups()->create(['opponent' => 'X']);
+
+        $this->actingAs($this->coach)->get(route('teams.lineups.index', $other))->assertForbidden();
+        $this->get(route('teams.lineups.print', [$other, $lineup]))->assertForbidden();
+        // La distinta di un'altra squadra non si apre passando dalla propria.
+        $this->get(route('teams.lineups.edit', [$this->team, $lineup]))->assertNotFound();
 
         $admin = User::factory()->admin()->create();
-        $this->actingAs($admin)->get(route('games.callups.edit', [$game, $game->homeTeam]))->assertOk();
+        $this->actingAs($admin)->get(route('lineups.index'))->assertOk()->assertSee($this->team->name)->assertSee($other->name);
+        $this->get(route('teams.lineups.print', [$other, $lineup]))->assertOk();
         $this->get(route('attendances.index'))->assertOk()->assertSee($this->team->name);
-        $this->get(route('callups.index', ['tournament' => $game->tournament_id]))->assertOk()->assertSee('Distinta '.$game->awayTeam->name);
     }
 }

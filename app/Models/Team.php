@@ -88,6 +88,16 @@ class Team extends Model
     }
 
     /**
+     * Distinte della squadra, dalla più recente.
+     *
+     * @return HasMany<Lineup, $this>
+     */
+    public function lineups(): HasMany
+    {
+        return $this->hasMany(Lineup::class)->latest('kickoff_at')->latest('id');
+    }
+
+    /**
      * Allenamenti in calendario per una data (stesso giorno della settimana).
      *
      * @return Collection<int, Training>

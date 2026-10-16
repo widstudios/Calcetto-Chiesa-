@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Un convocato nella distinta di gara: maglia ed eventuale fascia da capitano.
+ * Un convocato nella distinta: maglia ed eventuale fascia da capitano.
  */
-#[Fillable(['game_id', 'team_id', 'player_id', 'shirt_number', 'captain'])]
-class Callup extends Model
+#[Fillable(['lineup_id', 'player_id', 'shirt_number', 'captain'])]
+class LineupPlayer extends Model
 {
     public const CAPTAIN = 'capitano';
 
