@@ -39,8 +39,10 @@ class AttendanceLineupTest extends TestCase
         $paolo = Player::factory()->for($this->team)->create(['first_name' => 'Paolo', 'last_name' => 'Neri']);
 
         $this->actingAs($this->coach)->get(route('attendances.index'))->assertRedirect(route('teams.attendances.show', $this->team));
-        // Il mercoledì di allenamento compare come appello da fare.
-        $this->get(route('teams.attendances.show', $this->team))->assertOk()->assertSee('Mercoledì 14 ottobre 2026')->assertSee('Appello da fare');
+        // L'allenamento inserito compare una volta sola, con l'ultimo mercoledì da segnare.
+        $this->get(route('teams.attendances.show', $this->team))->assertOk()
+            ->assertSee('Mercoledì · 18:00 - 19:30')->assertSee('14/10/2026')->assertSee('Appello da fare')
+            ->assertDontSee('07/10/2026');
         $this->get(route('teams.attendances.edit', [$this->team, 'data' => '2026-10-14']))->assertOk()->assertSee('Marco Verdi')->assertSee('18:00 - 19:30');
 
         $this->put(route('teams.attendances.update', $this->team), [
@@ -78,8 +80,8 @@ class AttendanceLineupTest extends TestCase
         $this->put(route('teams.attendances.update', $this->team), ['data' => '2026-10-15', 'players' => [$player->id => '1']])->assertSessionHasErrors('data');
         $this->assertSame(0, Attendance::count());
 
-        // Più vecchio di quattro settimane: non in elenco ma comunque un mercoledì di allenamento.
-        $this->get(route('teams.attendances.show', $this->team))->assertSee('Mercoledì 23 settembre 2026')->assertDontSee('Mercoledì 16 settembre 2026');
+        // Nessun altro giorno in elenco: solo l'allenamento inserito.
+        $this->get(route('teams.attendances.show', $this->team))->assertSee('14/10/2026')->assertSee('Mercoledì · 18:00 - 19:30')->assertDontSee('Giovedì');
     }
 
     public function test_roll_call_rejects_future_dates_and_other_teams(): void
