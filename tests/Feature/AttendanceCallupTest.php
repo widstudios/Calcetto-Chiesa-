@@ -136,6 +136,6 @@ class AttendanceCallupTest extends TestCase
         $admin = User::factory()->admin()->create();
         $this->actingAs($admin)->get(route('games.callups.edit', [$game, $game->homeTeam]))->assertOk();
         $this->get(route('attendances.index'))->assertOk()->assertSee($this->team->name);
-        $this->get(route('callups.index'))->assertOk()->assertSee('Distinta '.$game->awayTeam->name);
+        $this->get(route('callups.index', ['tournament' => $game->tournament_id]))->assertOk()->assertSee('Distinta '.$game->awayTeam->name);
     }
 }
