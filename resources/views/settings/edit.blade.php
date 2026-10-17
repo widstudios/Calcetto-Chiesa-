@@ -29,6 +29,11 @@
             <label class="inline-check"><input type="checkbox" name="remove_logo" value="1"> Togli il logo e torna al pallone</label>
         @endif
 
+        <label for="lineup_max_players">Giocatori in distinta al massimo</label>
+        <input id="lineup_max_players" type="number" inputmode="numeric" min="1" max="40" name="lineup_max_players" value="{{ old('lineup_max_players', $lineupMaxPlayers) }}" style="max-width: 160px" @error('lineup_max_players') aria-invalid="true" aria-describedby="lineup_max_players-error" @enderror>
+        <p class="hint">Il regolamento Oratorio Cup (art. 5.1) ne ammette fino a {{ App\Models\Setting::LINEUP_MAX_PLAYERS }}. Una distinta con più convocati non si salva. Se una categoria ha un limite diverso, mettilo nel suo torneo.</p>
+        @include('partials.error', ['field' => 'lineup_max_players'])
+
         <div class="form-actions">
             <button class="btn" type="submit">Salva</button>
             <a class="btn secondary" href="{{ route('dashboard') }}">Annulla</a>

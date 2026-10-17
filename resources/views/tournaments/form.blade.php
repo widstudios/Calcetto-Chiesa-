@@ -31,6 +31,11 @@
             </div>
         </div>
 
+        <label for="lineup_max_players">Giocatori in distinta al massimo</label>
+        <input id="lineup_max_players" type="number" inputmode="numeric" min="1" max="40" name="lineup_max_players" value="{{ old('lineup_max_players', $tournament->lineup_max_players) }}" placeholder="{{ App\Models\Setting::lineupMaxPlayers() }}" style="max-width: 160px" @error('lineup_max_players') aria-invalid="true" @enderror>
+        <p class="hint">Lascia vuoto per usare il valore delle Impostazioni ({{ App\Models\Setting::lineupMaxPlayers() }}, dal regolamento). Mettilo solo se questa categoria ha un limite diverso.</p>
+        @include('partials.error', ['field' => 'lineup_max_players'])
+
         <label for="description">Descrizione</label>
         <textarea id="description" name="description" rows="3">{{ old('description', $tournament->description) }}</textarea>
 

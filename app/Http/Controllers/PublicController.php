@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Enums\GameStatus;
 use App\Models\Tournament;
+use App\Support\Pdf;
 use App\Support\TournamentStats;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -51,5 +53,20 @@ class PublicController extends Controller
                 'teams' => $tournament->teams()->count(),
             ],
         ]);
+    }
+
+    /**
+     * Classifica, marcatori e voti medi in PDF.
+     */
+    public function standingsPdf(Tournament $tournament): Response
+    {
+        $stats = new TournamentStats($tournament);
+
+        return Pdf::download('pdf.standings', [
+            'tournament' => $tournament,
+            'standings' => $stats->standings(),
+            'scorers' => $stats->topScorers(),
+            'ratings' => $stats->bestRatings(),
+        ], 'classifica '.$tournament->name);
     }
 }

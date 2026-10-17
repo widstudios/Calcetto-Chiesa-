@@ -6,8 +6,11 @@ use App\Models\Game;
 use App\Models\Lineup;
 use App\Models\LineupPlayer;
 use App\Models\Team;
+use App\Support\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -101,10 +104,30 @@ class LineupController extends Controller
         return view('lineups.print', [
             'team' => $team,
             'lineup' => $lineup,
-            'players' => $lineup->players()->with('player')->get()
-                ->sortBy(fn (LineupPlayer $row) => sprintf('%03d-%s', $row->shirt_number ?? 999, $row->player->last_name))
-                ->values(),
+            'players' => $this->sortedPlayers($lineup),
         ]);
+    }
+
+    public function pdf(Team $team, Lineup $lineup): Response
+    {
+        Gate::authorize('manageRoster', $team);
+
+        $team->load(['tournament', 'coaches']);
+        $lineup->load(['team', 'game.tournament', 'game.homeTeam', 'game.awayTeam']);
+
+        return Pdf::download('pdf.lineup', [
+            'team' => $team,
+            'lineup' => $lineup,
+            'players' => $this->sortedPlayers($lineup),
+            'max' => $team->tournament->lineupMaxPlayers(),
+        ], 'distinta '.$lineup->title().' '.$lineup->kickoff_at?->format('Y-m-d'));
+    }
+
+    private function sortedPlayers(Lineup $lineup): Collection
+    {
+        return $lineup->players()->with('player')->get()
+            ->sortBy(fn (LineupPlayer $row) => sprintf('%03d-%s', $row->shirt_number ?? 999, $row->player->last_name))
+            ->values();
     }
 
     private function form(Team $team, Lineup $lineup): View
@@ -117,6 +140,7 @@ class LineupController extends Controller
             'lineup' => $lineup,
             'games' => $team->games()->with(['homeTeam', 'awayTeam'])->get(),
             'saved' => $saved,
+            'max' => $team->tournament->lineupMaxPlayers(),
             // Distinta nuova: proposti tutti i calciatori della prima squadra.
             'isNew' => ! $lineup->exists,
         ]);
@@ -147,9 +171,15 @@ class LineupController extends Controller
         $called = collect($data['players'] ?? [])
             ->filter(fn ($row, $id) => ($row['called'] ?? false) && in_array((int) $id, $playerIds, true));
 
-        validator($data)->after(function (Validator $validator) use ($called, $data) {
+        // Regolamento: la distinta ha un numero massimo di giocatori.
+        $max = $team->tournament->lineupMaxPlayers();
+
+        validator($data)->after(function (Validator $validator) use ($called, $data, $max) {
             if ($called->isEmpty()) {
                 $validator->errors()->add('players', 'Seleziona almeno un convocato.');
+            }
+            if ($called->count() > $max) {
+                $validator->errors()->add('players', "Il regolamento ammette al massimo {$max} giocatori in distinta: ne hai spuntati {$called->count()}. Togli ".($called->count() - $max === 1 ? 'un convocato.' : ($called->count() - $max).' convocati.'));
             }
             $numbers = $called->pluck('shirt_number')->filter();
             if ($numbers->count() !== $numbers->unique()->count()) {

@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Game;
 use App\Models\Team;
 use App\Models\Tournament;
+use App\Support\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -26,6 +28,14 @@ class GameController extends Controller
                 ? $tournament->games()->with(['homeTeam', 'awayTeam'])->orderBy('matchday')->get()
                 : collect(),
         ]);
+    }
+
+    public function pdf(Tournament $tournament): Response
+    {
+        return Pdf::download('pdf.games', [
+            'tournament' => $tournament,
+            'games' => $tournament->games()->with(['homeTeam', 'awayTeam'])->get(),
+        ], 'calendario '.$tournament->name);
     }
 
     public function create(Request $request): View

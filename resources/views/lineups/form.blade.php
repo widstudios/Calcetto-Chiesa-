@@ -41,6 +41,7 @@
 
         <span class="legend" style="margin-top: 24px">Chi va in campo</span>
         <p class="hint" style="margin-top: 0">Spunta i convocati e controlla il numero di maglia. Scegli capitano (C) e vice (VC) tra i convocati.{{ $isNew ? ' Sono già spuntati i calciatori della prima squadra.' : '' }}</p>
+        <p class="lineup-count" data-max="{{ $max }}" role="status"><x-icon name="shirt" /> <span><strong data-count>–</strong> convocati su {{ $max }} ammessi dal regolamento</span></p>
         @include('partials.error', ['field' => 'players'])
         @include('partials.error', ['field' => 'captain'])
         @include('partials.error', ['field' => 'vice'])
@@ -84,4 +85,19 @@
             <a class="btn secondary" href="{{ route('teams.lineups.index', $team) }}">Annulla</a>
         </div>
     </form>
+
+    <script>
+        // Conta i convocati mentre si spuntano e avvisa se si supera il massimo del regolamento.
+        (() => {
+            const box = document.querySelector('.lineup-count');
+            const boxes = document.querySelectorAll('.callup-sheet input[type=checkbox]');
+            const update = () => {
+                const n = [...boxes].filter((b) => b.checked).length;
+                box.querySelector('[data-count]').textContent = n;
+                box.classList.toggle('over', n > Number(box.dataset.max));
+            };
+            boxes.forEach((b) => b.addEventListener('change', update));
+            update();
+        })();
+    </script>
 @endsection

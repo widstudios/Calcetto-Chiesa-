@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 // Sito pubblico del torneo: visibile a tutti.
 Route::get('/', PublicController::class)->name('home');
+Route::get('classifica/{tournament}/pdf', [PublicController::class, 'standingsPdf'])->name('standings.pdf');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
@@ -34,6 +35,7 @@ Route::middleware('auth')->group(function () {
 
     // Squadre: l'admin le gestisce tutte, l'allenatore vede e modifica la rosa delle sue.
     Route::resource('teams', TeamController::class);
+    Route::get('teams/{team}/pdf', [TeamController::class, 'pdf'])->name('teams.pdf');
     Route::scopeBindings()->group(function () {
         Route::resource('teams.players', PlayerController::class)->except(['index', 'show']);
         Route::resource('teams.trainings', TrainingController::class)->only(['store', 'destroy']);
@@ -42,6 +44,7 @@ Route::middleware('auth')->group(function () {
     // Appello degli allenamenti e distinte di gara: l'allenatore per le sue squadre, l'admin per tutte.
     Route::get('presenze', [AttendanceController::class, 'index'])->name('attendances.index');
     Route::get('teams/{team}/presenze', [AttendanceController::class, 'show'])->name('teams.attendances.show');
+    Route::get('teams/{team}/presenze/pdf', [AttendanceController::class, 'pdf'])->name('teams.attendances.pdf');
     Route::get('teams/{team}/presenze/appello', [AttendanceController::class, 'edit'])->name('teams.attendances.edit');
     Route::put('teams/{team}/presenze/appello', [AttendanceController::class, 'update'])->name('teams.attendances.update');
     Route::delete('teams/{team}/presenze/appello', [AttendanceController::class, 'destroy'])->name('teams.attendances.destroy');
@@ -54,6 +57,7 @@ Route::middleware('auth')->group(function () {
         Route::put('{lineup}', 'update')->name('update');
         Route::delete('{lineup}', 'destroy')->name('destroy');
         Route::get('{lineup}/stampa', 'print')->name('print');
+        Route::get('{lineup}/pdf', 'pdf')->name('pdf');
     });
 
     // Libreria allenamenti: tutti la consultano, solo l'admin la modifica.
@@ -63,6 +67,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('esercizi', DrillController::class)->except(['index', 'show'])->names('drills')->parameters(['esercizi' => 'drill']);
         Route::resource('tournaments', TournamentController::class)->except('show');
         Route::resource('coaches', CoachController::class)->except('show')->parameters(['coaches' => 'coach']);
+        Route::get('games/pdf/{tournament}', [GameController::class, 'pdf'])->name('games.pdf');
         Route::resource('games', GameController::class)->except('show');
         Route::get('games/{game}/tabellino', [GameSheetController::class, 'edit'])->name('games.sheet.edit');
         Route::put('games/{game}/tabellino', [GameSheetController::class, 'update'])->name('games.sheet.update');

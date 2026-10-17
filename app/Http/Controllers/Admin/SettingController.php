@@ -20,6 +20,7 @@ class SettingController extends Controller
         return view('settings.edit', [
             'siteName' => Setting::get('site_name'),
             'logoUrl' => Setting::logoUrl(),
+            'lineupMaxPlayers' => Setting::lineupMaxPlayers(),
         ]);
     }
 
@@ -30,7 +31,9 @@ class SettingController extends Controller
             'site_name' => ['nullable', 'string', 'max:60'],
             'logo' => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp,gif', 'max:2048'],
             'remove_logo' => ['nullable', 'boolean'],
+            'lineup_max_players' => ['nullable', 'integer', 'min:1', 'max:40'],
         ], [
+            'lineup_max_players.*' => 'Il massimo in distinta va da 1 a 40 giocatori.',
             'site_name.max' => 'Il nome può avere al massimo 60 caratteri.',
             'logo.mimes' => 'Il logo deve essere un\'immagine PNG, JPG, WEBP o GIF.',
             'logo.max' => 'Il logo può pesare al massimo 2 MB.',
@@ -38,6 +41,9 @@ class SettingController extends Controller
         ]);
 
         Setting::put('site_name', trim($data['site_name'] ?? ''));
+        // Vuoto o uguale al regolamento: non si salva, così vale il valore predefinito.
+        $max = (int) ($data['lineup_max_players'] ?? Setting::LINEUP_MAX_PLAYERS);
+        Setting::put('lineup_max_players', $max === Setting::LINEUP_MAX_PLAYERS ? null : (string) $max);
 
         $disk = Storage::disk('uploads');
         $oldLogo = Setting::get('logo');

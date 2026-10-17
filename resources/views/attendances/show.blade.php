@@ -3,7 +3,7 @@
 @section('title', 'Presenze '.$team->name)
 
 @section('content')
-    @include('partials.form-head', ['back' => route('attendances.index'), 'eyebrow' => $team->tournament->name, 'title' => 'Presenze '.$team->name])
+    @include('partials.form-head', ['back' => route('attendances.index'), 'eyebrow' => $team->tournament->name, 'title' => 'Presenze '.$team->name, 'action' => ['href' => route('teams.attendances.pdf', $team), 'icon' => 'download', 'label' => 'Scarica PDF']])
 
     <section class="card flush">
         <div class="card-head">

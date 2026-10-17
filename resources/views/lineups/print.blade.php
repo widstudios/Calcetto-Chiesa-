@@ -11,6 +11,7 @@
     <div class="print-toolbar no-print">
         <a class="btn small secondary" href="{{ route('teams.lineups.index', $team) }}"><x-icon name="back" /> Distinte</a>
         <a class="btn small secondary" href="{{ route('teams.lineups.edit', [$team, $lineup]) }}"><x-icon name="pencil" /> Modifica</a>
+        <a class="btn small secondary" href="{{ route('teams.lineups.pdf', [$team, $lineup]) }}"><x-icon name="download" /> PDF</a>
         <button class="btn small" type="button" onclick="window.print()"><x-icon name="printer" /> Stampa</button>
     </div>
     @if (session('status'))

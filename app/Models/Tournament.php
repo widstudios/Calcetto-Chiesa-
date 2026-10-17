@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'season', 'starts_on', 'ends_on', 'description'])]
+#[Fillable(['name', 'season', 'starts_on', 'ends_on', 'lineup_max_players', 'description'])]
 class Tournament extends Model
 {
     /** @use HasFactory<TournamentFactory> */
@@ -19,7 +19,16 @@ class Tournament extends Model
         return [
             'starts_on' => 'date',
             'ends_on' => 'date',
+            'lineup_max_players' => 'integer',
         ];
+    }
+
+    /**
+     * Quanti giocatori può avere al massimo una distinta: quello del torneo, altrimenti quello generale.
+     */
+    public function lineupMaxPlayers(): int
+    {
+        return $this->lineup_max_players ?? Setting::lineupMaxPlayers();
     }
 
     /**

@@ -328,6 +328,9 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
 input[aria-invalid=true], select[aria-invalid=true] { border-color: var(--danger); }
 .error { display: flex; align-items: center; gap: 6px; color: var(--danger); font-size: .875rem; margin-top: 6px; font-weight: 500; }
 .hint { color: var(--muted); font-size: .875rem; margin: 6px 0 0; }
+.lineup-count { display: inline-flex; align-items: center; gap: 8px; margin: 8px 0 12px; padding: 6px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); font-size: .875rem; }
+.lineup-count svg { width: 16px; height: 16px; }
+.lineup-count.over { background: #fee2e2; color: var(--danger); font-weight: 600; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 16px; }
 .field-group { margin-top: 16px; }
 .field-group > label:first-child, .legend { margin-top: 0; }

@@ -76,7 +76,7 @@
     @else
         <div class="public-grid">
             <section class="card flush" id="classifica">
-                <div class="card-head"><h2><x-icon name="trophy" /> Classifica</h2></div>
+                <div class="card-head"><h2><x-icon name="trophy" /> Classifica</h2><a class="btn small secondary" href="{{ route('standings.pdf', $tournament) }}"><x-icon name="download" /> PDF</a></div>
                 @if ($standings->isEmpty())
                     <div class="empty"><p>Nessuna squadra iscritta.</p></div>
                 @else

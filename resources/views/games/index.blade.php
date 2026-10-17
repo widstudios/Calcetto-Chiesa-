@@ -9,7 +9,10 @@
             <h1>Calendario partite</h1>
         </div>
         @if ($tournament)
-            <a class="btn" href="{{ route('games.create', ['tournament' => $tournament->id]) }}"><x-icon name="plus" /> Nuova partita</a>
+            <div class="actions">
+                <a class="btn secondary" href="{{ route('games.pdf', $tournament) }}"><x-icon name="download" /> Scarica PDF</a>
+                <a class="btn" href="{{ route('games.create', ['tournament' => $tournament->id]) }}"><x-icon name="plus" /> Nuova partita</a>
+            </div>
         @endif
     </div>
 
