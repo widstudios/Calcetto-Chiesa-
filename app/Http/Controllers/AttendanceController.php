@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Drill;
 use App\Models\Team;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -41,6 +42,7 @@ class AttendanceController extends Controller
         $team->load(['tournament', 'trainings', 'players' => fn ($q) => $q->orderBy('last_name')->orderBy('first_name')]);
         $attendances = $team->attendances()->get();
         $byDate = $attendances->groupBy(fn ($a) => $a->date->toDateString());
+        $drillsByDate = $team->trainingDrills()->with('drill')->get()->groupBy(fn ($row) => $row->date->toDateString());
 
         // Un appello per ogni giorno di allenamento inserito: l'ultimo in cui c'è stato (oggi compreso).
         $today = CarbonImmutable::today();
@@ -58,6 +60,7 @@ class AttendanceController extends Controller
             'history' => $byDate->sortKeysDesc()->map(fn ($rows, $date) => (object) [
                 'date' => CarbonImmutable::parse($date),
                 'done' => $count($rows),
+                'drills' => $drillsByDate->get($date, collect())->pluck('drill')->filter()->values(),
             ])->values(),
             'summary' => $this->summary($team, $attendances),
         ]);
@@ -76,6 +79,8 @@ class AttendanceController extends Controller
             'date' => $date,
             'trainings' => $team->trainingsOn($date),
             'saved' => $saved,
+            'drillOptions' => Drill::grouped(),
+            'savedDrills' => $team->trainingDrills()->whereDate('date', $date)->orderBy('id')->pluck('drill_id'),
         ]);
     }
 
@@ -88,7 +93,10 @@ class AttendanceController extends Controller
         $data = $request->validate([
             'players' => ['required', 'array'],
             'players.*' => ['required', 'in:0,1'],
+            'drills' => ['nullable', 'array', 'max:12'],
+            'drills.*' => ['nullable', 'integer', 'exists:drills,id'],
         ], [
+            'drills.*.exists' => 'Uno degli esercizi scelti non esiste più.',
             'players.required' => 'Non ci sono calciatori da segnare.',
         ]);
 
@@ -105,6 +113,12 @@ class AttendanceController extends Controller
             $row->save();
         }
 
+        // Esercizi fatti: si sostituiscono tutti, senza doppioni né tendine lasciate vuote.
+        $team->trainingDrills()->whereDate('date', $date)->delete();
+        foreach (collect($data['drills'] ?? [])->filter()->map(fn ($id) => (int) $id)->unique() as $drillId) {
+            $team->trainingDrills()->create(['drill_id' => $drillId, 'date' => $date]);
+        }
+
         return redirect()->route('teams.attendances.show', $team)
             ->with('status', 'Appello del '.$date->format('d/m/Y').' salvato.');
     }
@@ -115,6 +129,7 @@ class AttendanceController extends Controller
 
         $date = $this->date($request, $team, scheduled: false);
         $team->attendances()->whereDate('date', $date)->delete();
+        $team->trainingDrills()->whereDate('date', $date)->delete();
 
         return redirect()->route('teams.attendances.show', $team)
             ->with('status', 'Appello del '.$date->format('d/m/Y').' cancellato.');

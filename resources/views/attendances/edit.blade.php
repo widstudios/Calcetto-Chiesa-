@@ -41,6 +41,28 @@
             </ul>
         @endif
 
+        @if ($drillOptions->isNotEmpty())
+            <div class="field-group drill-picks">
+                <span class="legend">Esercizi fatti in allenamento</span>
+                <p class="hint" style="margin: -4px 0 8px">Scegli cosa avete fatto. Come si fa ogni esercizio lo trovi negli <a href="{{ route('drills.index') }}">Esercizi</a>.</p>
+                @php($picked = collect(old('drills', $savedDrills->all()))->map(fn ($id) => (string) $id)->values())
+                @for ($i = 0; $i < max(4, $picked->filter()->count() + 1); $i++)
+                    <label class="sr-only" for="drill-{{ $i }}">Esercizio {{ $i + 1 }}</label>
+                    <select id="drill-{{ $i }}" name="drills[]">
+                        <option value="">Esercizio {{ $i + 1 }}: nessuno</option>
+                        @foreach ($drillOptions as $drills)
+                            <optgroup label="{{ $drills->first()->category->label() }}">
+                                @foreach ($drills as $option)
+                                    <option value="{{ $option->id }}" @selected($picked->get($i) === (string) $option->id)>{{ $option->name }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                @endfor
+                @error('drills.*') <div class="error"><x-icon name="alert" /> {{ $message }}</div> @enderror
+            </div>
+        @endif
+
         <div class="form-actions">
             <button class="btn" type="submit"><x-icon name="check" /> Salva appello</button>
             <a class="btn secondary" href="{{ route('teams.attendances.show', $team) }}">Annulla</a>

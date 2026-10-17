@@ -2,6 +2,12 @@
 {{-- Icone SVG in stile Lucide: decorative, il testo accanto dà il significato. --}}
 <svg {{ $attributes->merge(['class' => 'icon']) }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
 @switch($name)
+    @case('cone')
+        <path d="M10.2 3.6a2 2 0 0 1 3.6 0L19 17H5z"/><path d="M7.5 10.5h9M3 21h18M5 17l-2 4M19 17l2 4"/>
+        @break
+    @case('play')
+        <circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/>
+        @break
     @case('ball')
         <circle cx="12" cy="12" r="10"/><path d="m12 7 4.3 3.1-1.6 5H9.3l-1.6-5z"/><path d="M12 2v5M21.5 9l-5.2 1.1M18.2 19.8l-3.5-4.7M5.8 19.8l3.5-4.7M2.5 9l5.2 1.1"/>
         @break
