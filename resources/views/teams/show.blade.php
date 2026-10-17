@@ -23,6 +23,7 @@
                 <a class="btn secondary" href="{{ route('teams.attendances.show', $team) }}"><x-icon name="checklist" /> Presenze</a>
                 <a class="btn secondary" href="{{ route('teams.lineups.index', $team) }}"><x-icon name="clipboard" /> Distinte</a>
             @endcan
+            <a class="btn secondary" href="{{ route('teams.pdf', $team) }}"><x-icon name="download" /> PDF rosa</a>
             @can('update', $team)
                 <a class="btn secondary" href="{{ route('teams.edit', $team) }}"><x-icon name="pencil" /> Modifica squadra</a>
             @endcan

@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Drill;
 use App\Models\Team;
+use App\Support\Pdf;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -64,6 +66,25 @@ class AttendanceController extends Controller
             ])->values(),
             'summary' => $this->summary($team, $attendances),
         ]);
+    }
+
+    /**
+     * Riepilogo e registro delle presenze in PDF.
+     */
+    public function pdf(Team $team): Response
+    {
+        Gate::authorize('manageRoster', $team);
+
+        $team->load(['tournament', 'players' => fn ($q) => $q->orderBy('last_name')->orderBy('first_name')]);
+        $attendances = $team->attendances()->get();
+
+        return Pdf::download('pdf.attendances', [
+            'team' => $team,
+            'summary' => $this->summary($team, $attendances),
+            'dates' => $attendances->map(fn ($a) => CarbonImmutable::parse($a->date->toDateString()))->unique()->sort()->values(),
+            'marks' => $attendances->mapWithKeys(fn ($a) => [$a->player_id.'|'.$a->date->toDateString() => (bool) $a->present]),
+            'presentByDate' => $attendances->where('present', true)->countBy(fn ($a) => $a->date->toDateString()),
+        ], 'presenze '.$team->name, landscape: true);
     }
 
     public function edit(Request $request, Team $team): View

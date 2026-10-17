@@ -6,8 +6,10 @@ use App\Enums\Role;
 use App\Models\Team;
 use App\Models\Tournament;
 use App\Models\User;
+use App\Support\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -41,6 +43,15 @@ class TeamController extends Controller
         $team->load(['tournament', 'coaches', 'trainings', 'players' => fn ($q) => $q->orderBy('squad_role')->orderBy('shirt_number')]);
 
         return view('teams.show', ['team' => $team]);
+    }
+
+    public function pdf(Team $team): Response
+    {
+        Gate::authorize('view', $team);
+
+        $team->load(['tournament', 'coaches', 'trainings', 'players' => fn ($q) => $q->orderBy('shirt_number')->orderBy('last_name')]);
+
+        return Pdf::download('pdf.roster', ['team' => $team], 'rosa '.$team->name);
     }
 
     public function create(Request $request): View

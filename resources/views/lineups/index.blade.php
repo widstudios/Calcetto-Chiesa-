@@ -37,6 +37,7 @@
                         </div>
                         <div class="actions">
                             <a class="btn small" href="{{ route('teams.lineups.print', [$team, $lineup]) }}"><x-icon name="printer" /> <span class="btn-text">Stampa</span></a>
+                            <a class="btn small secondary" href="{{ route('teams.lineups.pdf', [$team, $lineup]) }}"><x-icon name="download" /> <span class="btn-text">PDF</span></a>
                             <a class="btn small secondary" href="{{ route('teams.lineups.edit', [$team, $lineup]) }}"><x-icon name="pencil" /> <span class="btn-text">Modifica</span></a>
                             @include('partials.delete', ['action' => route('teams.lineups.destroy', [$team, $lineup]), 'confirm' => 'Eliminare questa distinta?'])
                         </div>

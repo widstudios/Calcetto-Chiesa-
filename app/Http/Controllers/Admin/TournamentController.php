@@ -61,7 +61,10 @@ class TournamentController extends Controller
             'season' => ['nullable', 'string', 'max:20'],
             'starts_on' => ['nullable', 'date'],
             'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
+            'lineup_max_players' => ['nullable', 'integer', 'min:1', 'max:40'],
             'description' => ['nullable', 'string', 'max:2000'],
+        ], [
+            'lineup_max_players.*' => 'Il massimo in distinta va da 1 a 40 giocatori.',
         ]);
     }
 }

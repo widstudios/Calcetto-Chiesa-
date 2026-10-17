@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Schema;
  */
 class Setting extends Model
 {
+    /** Regolamento Oratorio Cup, art. 5.1: "La distinta può contenere fino a un massimo di 15 giocatori". */
+    public const LINEUP_MAX_PLAYERS = 15;
+
     protected $primaryKey = 'key';
 
     protected $keyType = 'string';
@@ -60,5 +63,11 @@ class Setting extends Model
 
         // asset() tiene conto dell'indirizzo con cui si apre il sito, anche se è in una sottocartella.
         return $path ? asset('uploads/'.$path) : null;
+    }
+
+    /** Massimo di giocatori in distinta per tutte le categorie che non ne hanno uno proprio. */
+    public static function lineupMaxPlayers(): int
+    {
+        return (int) (self::get('lineup_max_players') ?? self::LINEUP_MAX_PLAYERS);
     }
 }
