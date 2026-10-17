@@ -81,5 +81,9 @@ class ThemeTest extends TestCase
         $this->assertGreaterThanOrEqual(4.5, Theme::contrast('#d71920', '#ffffff'));
         $this->assertSame([], Theme::contrastErrors(Theme::PRESETS['san-nicola']['colors']));
         $this->assertSame([], Theme::contrastErrors(Theme::PRESETS['verde']['colors']));
+
+        // Bianco su #767676 passa (4,5:1) ma non sul lato più chiaro della sfumatura.
+        $grey = ['header_bg' => '#767676', 'header_text' => '#ffffff'] + Theme::PRESETS['verde']['colors'];
+        $this->assertArrayHasKey('header_text', Theme::contrastErrors($grey));
     }
 }

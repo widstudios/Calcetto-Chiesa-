@@ -99,7 +99,8 @@ p { margin: 0 0 12px; }
 .topnav a {
     display: flex; white-space: nowrap; align-items: center; gap: 8px;
     min-height: 44px; padding: 0 14px; border-radius: 999px;
-    color: rgba(var(--header-text-rgb), .85); text-decoration: none; font-weight: 600;
+    /* Colore pieno: è quello su cui Impostazioni misura il contrasto */
+    color: var(--header-text); text-decoration: none; font-weight: 600;
     transition: background-color .15s ease, color .15s ease;
 }
 .topnav a:hover { background: rgba(var(--header-text-rgb), .12); color: var(--header-text); }
@@ -109,7 +110,7 @@ p { margin: 0 0 12px; }
 .user-chip { display: flex; flex-direction: column; text-align: right; line-height: 1.2; }
 .user-chip { max-width: 180px; }
 .user-chip strong, .user-chip span { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.user-chip span { font-weight: 400; font-size: .8125rem; color: rgba(var(--header-text-rgb), .75); }
+.user-chip span { font-weight: 400; font-size: .8125rem; color: var(--header-text); }
 .icon-btn {
     display: inline-grid; place-items: center;
     width: 44px; height: 44px; border-radius: 12px; cursor: pointer;

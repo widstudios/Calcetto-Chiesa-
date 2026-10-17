@@ -58,8 +58,11 @@ class Theme
      */
     public static function contrastErrors(array $c): array
     {
+        // L'intestazione scura sfuma verso un tono più chiaro: si misura sul punto meno favorevole.
+        $headerBg = collect([$c['header_bg'], self::headerEnd($c['header_bg'])])
+            ->sortBy(fn ($bg) => self::contrast($c['header_text'], $bg))->first();
         $checks = [
-            'header_text' => [$c['header_text'], $c['header_bg'], 4.5, 'I testi dell\'intestazione si leggono male su quello sfondo'],
+            'header_text' => [$c['header_text'], $headerBg, 4.5, 'I testi dell\'intestazione si leggono male su quello sfondo'],
             'primary' => [$c['primary'], self::SURFACE, 4.5, 'Il colore principale è troppo chiaro: su bianco i link e le scritte bianche dei pulsanti non si leggono'],
             'heading' => [$c['heading'], self::PAGE_BG, 3, 'I titoli si leggono male sullo sfondo chiaro delle pagine'],
             'accent' => [$c['accent'], self::mix($c['primary'], '#000000', .7), 3, 'Il colore di risalto si vede poco sulla fascia scura del sito pubblico'],
@@ -87,8 +90,6 @@ class Theme
         $deep = self::mix($c['primary'], '#000000', .7);
         $onAccent = collect([$deep, '#0f172a', '#ffffff'])
             ->first(fn ($ink) => self::contrast($ink, $c['accent']) >= 4.5) ?? '#ffffff';
-        // Intestazione scura: leggera sfumatura come quella verde; chiara: tinta unita.
-        $headerEnd = self::luminance($c['header_bg']) < .2 ? self::mix($c['header_bg'], '#ffffff', .15) : $c['header_bg'];
 
         $vars = [
             '--primary' => $c['primary'],
@@ -103,13 +104,19 @@ class Theme
             '--accent-ink' => self::mix($c['accent'], '#000000', .6),
             '--on-accent' => $onAccent,
             '--header-bg' => $c['header_bg'],
-            '--header-bg-2' => $headerEnd,
+            '--header-bg-2' => self::headerEnd($c['header_bg']),
             '--header-text' => $c['header_text'],
             '--header-text-rgb' => self::rgb($c['header_text']),
             '--heading' => $c['heading'],
         ];
 
         return ':root{'.collect($vars)->map(fn ($v, $k) => "$k:$v")->implode(';').'}';
+    }
+
+    /** Fine della sfumatura dell'intestazione: le scure schiariscono un po' come quella verde, le chiare restano a tinta unita. */
+    public static function headerEnd(string $bg): string
+    {
+        return self::luminance($bg) < .2 ? self::mix($bg, '#ffffff', .15) : $bg;
     }
 
     /** Rapporto di contrasto WCAG fra due colori #rrggbb (da 1 a 21). */
