@@ -13,9 +13,12 @@
     @forelse ($teams as $team)
         <section class="card flush">
             <div class="card-head">
-                <div>
-                    <h2>{{ $team->name }}</h2>
-                    <p class="muted small" style="margin: 2px 0 0">{{ $team->tournament->name }} · Allenatore: {{ $team->coachDisplayName() }}</p>
+                <div class="team-head">
+                    <x-team-badge :team="$team" />
+                    <div>
+                        <h2>{{ $team->name }}</h2>
+                        <p class="muted small" style="margin: 2px 0 0">{{ $team->tournament->name }} · Allenatore: {{ $team->coachDisplayName() }}</p>
+                    </div>
                 </div>
                 <div class="actions">
                     <a class="btn small" href="{{ route('teams.players.create', $team) }}"><x-icon name="plus" /> Calciatore</a>
