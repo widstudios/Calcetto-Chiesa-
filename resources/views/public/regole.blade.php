@@ -2,7 +2,8 @@
     Regole di gioco mostrate sulla pagina pubblica.
     Per modificarle basta cambiare il testo qui sotto: ogni <details> è una sezione apribile.
     Le voci con il bollino "Scelta del torneo" non sono fissate dal CSI: adattale al vostro torneo.
-    Fonti: norme tecniche CSI per il calcio a 5 ("Sport in Regola") e, per quanto non previsto,
+    Fonti: Oratorio Cup 2026/2027 del CSI Roma (https://www.csiroma.it/sport/attivita-parrocchiale/oratorio-cup/),
+    norme tecniche CSI per il calcio a 5 ("Sport in Regola") e, per quanto non previsto,
     il Regolamento del Giuoco del Calcio a Cinque FIGC/AIA (ed. 2025) a cui il CSI rinvia.
 --}}
 @php($locale = '<span class="badge gold">Scelta del torneo</span>')
@@ -10,11 +11,34 @@
 <section class="card flush rules" id="regole">
     <div class="card-head"><h2><x-icon name="book" /> Regole di gioco</h2></div>
     <p class="rules-intro">
-        Si gioca con le regole tecniche del calcio a 5 del Centro Sportivo Italiano (CSI), come negli oratori.
+        Si gioca come nell'<strong>Oratorio Cup del CSI Roma</strong>: le regole tecniche del calcio a 5 del Centro Sportivo Italiano (CSI), con lo spirito dell'oratorio.
         Le voci segnate {!! $locale !!} sono decise dall'organizzazione del torneo.
     </p>
 
     <details class="matchday" open>
+        <summary>Lo spirito dell'Oratorio Cup</summary>
+        <ul class="rules-list">
+            <li><strong>Giocano tutti</strong>, a prescindere dal livello tecnico, fino all'ultima giornata.</li>
+            <li>Ogni squadra indica un <strong>addetto all'arbitraggio</strong> (l'educatore-arbitro), formato dal CSI sul regolamento del calcio a 5, che dirige le partite giocate in casa.</li>
+            <li>Allenatori, dirigenti e arbitro sono la <strong>"terza squadra in campo"</strong>, quella degli educatori: il rispetto delle regole e dell'avversario viene prima del risultato.</li>
+            <li>Dopo il fischio finale c'è il <strong>quarto tempo</strong>: un momento insieme tra le due squadre per conoscersi.</li>
+            <li>Alla <strong>festa finale</strong> giocano tutte le squadre, con partite che assegnano ogni posizione, dalla prima all'ultima.</li>
+        </ul>
+    </details>
+
+    <details class="matchday">
+        <summary>Categorie e anni di nascita (2026/2027)</summary>
+        <ul class="rules-list">
+            <li><strong>Under 8</strong>: nati 2019-2021 · <strong>Under 9</strong>: 2018-2020, con fino a 3 sottoquota (2021) a partita.</li>
+            <li><strong>Under 10</strong>: 2017-2019 · <strong>Under 11</strong>: 2016-2018 · <strong>Under 12</strong>: 2015-2017.</li>
+            <li><strong>Under 13</strong> (Ragazzi): 2014-2016 · <strong>Under 14</strong> (Giovanissimi): 2013-2015, con 1 sottoquota a partita.</li>
+            <li><strong>Under 15</strong>: 2012-2014 · <strong>Under 16</strong>: 2011-2013 · <strong>Under 17</strong>: 2010-2012.</li>
+            <li><strong>Giovani</strong>: nati nel 2011 e prima · <strong>Amatori</strong>: nati nel 1992 e prima.</li>
+            <li>Fino all'Under 17 le squadre possono essere <strong>miste</strong>, con al massimo <strong>2 ragazze fuori quota</strong> per categoria. Le squadre tutte femminili possono iscriversi nella categoria inferiore.</li>
+        </ul>
+    </details>
+
+    <details class="matchday">
         <summary>Squadre e sostituzioni</summary>
         <ul class="rules-list">
             <li>In campo vanno <strong>5 giocatori per squadra</strong>, portiere compreso.</li>
@@ -99,6 +123,6 @@
     </details>
 
     <p class="small muted legend-line">
-        Per tutto ciò che qui non è scritto valgono le norme tecniche CSI "Sport in Regola" e il regolamento di gioco del calcio a 5. Decide sempre l'arbitro.
+        Per tutto ciò che qui non è scritto valgono i documenti ufficiali dell'<a href="https://www.csiroma.it/sport/attivita-parrocchiale/oratorio-cup/" target="_blank" rel="noopener">Oratorio Cup del CSI Roma</a>, le norme tecniche CSI "Sport in Regola" e il regolamento di gioco del calcio a 5. Decide sempre l'arbitro.
     </p>
 </section>
