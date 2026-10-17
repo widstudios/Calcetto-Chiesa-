@@ -3,7 +3,6 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#052e16">
     <title>@yield('title') · {{ \App\Models\Setting::siteName() }}</title>
     @if ($logo = \App\Models\Setting::logoUrl())
         <link rel="icon" href="{{ $logo }}">
@@ -13,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ @filemtime(public_path('css/app.css')) }}">
+    @include('partials.theme')
 </head>
 <body class="public">
     <header class="topbar">
