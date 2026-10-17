@@ -84,6 +84,17 @@ class TeamLogoTest extends TestCase
         Storage::disk('uploads')->assertMissing('squadra-1.png');
     }
 
+    public function test_deleting_tournament_deletes_its_team_logos(): void
+    {
+        Storage::fake('uploads');
+        Storage::disk('uploads')->put('squadra-1.png', 'x');
+        $team = Team::factory()->create(['logo' => 'squadra-1.png']);
+
+        $this->actingAs(User::factory()->admin()->create())->delete(route('tournaments.destroy', $team->tournament));
+
+        Storage::disk('uploads')->assertMissing('squadra-1.png');
+    }
+
     public function test_san_nicola_gets_its_logo_from_migration(): void
     {
         Storage::fake('uploads');

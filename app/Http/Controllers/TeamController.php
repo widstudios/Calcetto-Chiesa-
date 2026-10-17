@@ -59,10 +59,10 @@ class TeamController extends Controller
 
         $data = $this->validated($request);
         $team = Team::create(Arr::except($data, ['logo', 'remove_logo']));
+        $team->coaches()->sync($data['coaches'] ?? []);
         if ($error = $this->saveLogo($request, $team)) {
             return redirect()->route('teams.edit', $team)->withErrors(['logo' => $error]);
         }
-        $team->coaches()->sync($data['coaches'] ?? []);
 
         return redirect()->route('teams.show', $team)->with('status', 'Squadra creata. Ora puoi inserire i calciatori.');
     }
@@ -80,10 +80,10 @@ class TeamController extends Controller
 
         $data = $this->validated($request, $team);
         $team->update(Arr::except($data, ['logo', 'remove_logo']));
+        $team->coaches()->sync($data['coaches'] ?? []);
         if ($error = $this->saveLogo($request, $team)) {
             return back()->withInput()->withErrors(['logo' => $error]);
         }
-        $team->coaches()->sync($data['coaches'] ?? []);
 
         return redirect()->route('teams.show', $team)->with('status', 'Squadra aggiornata.');
     }

@@ -17,13 +17,10 @@ return new class extends Migration
 
         foreach ($teams as $team) {
             $path = Storage::disk('uploads')->putFileAs('', resource_path('loghi/san-nicola.jpg'), 'squadra-'.$team->id.'-'.Str::lower(Str::random(8)).'.jpg');
-            if (! $path) {
-                // Cartella non scrivibile: il logo si potrà caricare a mano da "Modifica squadra".
-                continue;
-            }
 
+            // Se la cartella non è scrivibile restano almeno i colori: il logo si carica a mano da "Modifica squadra".
             DB::table('teams')->where('id', $team->id)->update([
-                'logo' => $path,
+                'logo' => $path ?: null,
                 'shirt_color' => $team->shirt_color ?? '#dc2626',
                 'shirt_color_secondary' => $team->shirt_color_secondary ?? '#ffffff',
             ]);
