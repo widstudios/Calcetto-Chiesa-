@@ -13,12 +13,65 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['tournament_id', 'name', 'coach_name'])]
+#[Fillable(['tournament_id', 'name', 'coach_name', 'logo', 'shirt_color', 'shirt_color_secondary'])]
 class Team extends Model
 {
     /** @use HasFactory<TeamFactory> */
     use HasFactory;
+
+    /**
+     * Colori che si possono scegliere per la maglia.
+     *
+     * @var array<string, string>
+     */
+    public const SHIRT_COLORS = [
+        '#ffffff' => 'Bianco',
+        '#111827' => 'Nero',
+        '#9ca3af' => 'Grigio',
+        '#dc2626' => 'Rosso',
+        '#7f1d1d' => 'Granata',
+        '#f97316' => 'Arancione',
+        '#facc15' => 'Giallo',
+        '#16a34a' => 'Verde',
+        '#14532d' => 'Verde scuro',
+        '#38bdf8' => 'Azzurro',
+        '#1d4ed8' => 'Blu',
+        '#1e3a8a' => 'Blu notte',
+        '#7c3aed' => 'Viola',
+        '#ec4899' => 'Rosa',
+    ];
+
+    protected static function booted(): void
+    {
+        // Eliminata la squadra, il suo stemma non serve più.
+        static::deleted(fn (Team $team) => $team->logo && Storage::disk('uploads')->delete($team->logo));
+    }
+
+    /** Indirizzo dello stemma caricato, oppure null. */
+    public function logoUrl(): ?string
+    {
+        return $this->logo ? asset('uploads/'.$this->logo) : null;
+    }
+
+    /**
+     * Colori della maglia scelti (uno o due).
+     *
+     * @return list<string>
+     */
+    public function shirtColors(): array
+    {
+        return array_values(array_unique(array_filter([$this->shirt_color, $this->shirt_color_secondary])));
+    }
+
+    /** Colori della maglia a parole, per esempio «Rosso e Bianco». */
+    public function shirtColorsLabel(): ?string
+    {
+        $names = array_map(fn ($hex) => self::SHIRT_COLORS[$hex] ?? $hex, $this->shirtColors());
+
+        return $names ? implode(' e ', $names) : null;
+    }
 
     /**
      * @return BelongsTo<Tournament, $this>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tournament;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class TournamentController extends Controller
@@ -43,6 +44,8 @@ class TournamentController extends Controller
 
     public function destroy(Tournament $tournament): RedirectResponse
     {
+        // Le squadre spariscono a cascata nel database: i loro stemmi vanno cancellati a mano.
+        Storage::disk('uploads')->delete($tournament->teams()->whereNotNull('logo')->pluck('logo')->all());
         $tournament->delete();
 
         return redirect()->route('tournaments.index')->with('status', 'Torneo eliminato, con le sue squadre e partite.');

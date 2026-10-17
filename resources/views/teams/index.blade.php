@@ -41,7 +41,7 @@
             <ul class="list">
                 @foreach ($teams as $team)
                     <li class="list-item">
-                        <span class="avatar">{{ mb_substr($team->name, 0, 2) }}</span>
+                        <x-team-badge :team="$team" />
                         <div class="list-main">
                             <a class="list-title" href="{{ route('teams.show', $team) }}">{{ $team->name }}</a>
                             <div class="list-meta">

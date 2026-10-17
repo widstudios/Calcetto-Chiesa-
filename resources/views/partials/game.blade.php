@@ -18,13 +18,13 @@
     </div>
     @php($result = $game->isPlayed() ? $game->home_score <=> $game->away_score : null)
     <div class="match">
-        <div @class(['team home', 'lost' => $result === -1])>{{ $game->homeTeam->name }}</div>
+        <div @class(['team home', 'lost' => $result === -1])><span class="team-line">{{ $game->homeTeam->name }} <x-team-badge :team="$game->homeTeam" size="sm" /></span></div>
         @if ($game->isPlayed())
             <div class="score" aria-label="Risultato {{ $game->home_score }} a {{ $game->away_score }}">{{ $game->home_score }} – {{ $game->away_score }}</div>
         @else
             <div class="score pending">VS</div>
         @endif
-        <div @class(['team away', 'lost' => $result === 1])>{{ $game->awayTeam->name }}</div>
+        <div @class(['team away', 'lost' => $result === 1])><span class="team-line">{{ $game->awayTeam->name }} <x-team-badge :team="$game->awayTeam" size="sm" /></span></div>
     </div>
     @if (($sheet ?? false) && $game->isPlayed() && ($game->performances->isNotEmpty() || $game->mvp))
         <div class="game-sheet">

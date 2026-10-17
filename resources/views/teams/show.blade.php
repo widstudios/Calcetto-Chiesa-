@@ -4,10 +4,18 @@
 
 @section('content')
     <div class="page-head">
-        <div>
-            <span class="eyebrow">{{ $team->tournament->name }}</span>
-            <h1>{{ $team->name }}</h1>
-            <p class="muted">Allenatore: {{ $team->coachDisplayName() ?? 'non indicato' }}</p>
+        <div class="team-head">
+            <x-team-badge :team="$team" size="lg" />
+            <div>
+                <span class="eyebrow">{{ $team->tournament->name }}</span>
+                <h1>{{ $team->name }}</h1>
+                <p class="muted">
+                    Allenatore: {{ $team->coachDisplayName() ?? 'non indicato' }}
+                    @if ($team->shirtColors())
+                        <br>Maglia: @foreach ($team->shirtColors() as $color)<span class="kit-swatch" style="background: {{ $color }}"></span> @endforeach{{ $team->shirtColorsLabel() }}
+                    @endif
+                </p>
+            </div>
         </div>
         <div class="actions">
             @can('manageRoster', $team)

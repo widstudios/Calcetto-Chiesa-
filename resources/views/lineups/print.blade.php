@@ -29,7 +29,7 @@
             <h1>Distinta di gara</h1>
             <p class="distinta-match">{{ $lineup->title() }}</p>
             <dl class="distinta-info">
-                <div><dt>Squadra</dt><dd>{{ $team->name }}</dd></div>
+                <div><dt>Squadra</dt><dd><span class="team-line"><x-team-badge :team="$team" size="sm" /> {{ $team->name }}</span></dd></div>
                 <div><dt>Data e ora</dt><dd>{{ $lineup->kickoff_at?->format('d/m/Y H:i') ?? '________________' }}</dd></div>
                 <div><dt>Campo</dt><dd>{{ $lineup->venue ?: '________________' }}</dd></div>
             </dl>

@@ -34,9 +34,9 @@
                 <a class="next-match" href="#calendario">
                     <span class="next-label">Prossima partita @if ($next->matchday)<span>· {{ $next->matchday }}ª giornata</span>@endif</span>
                     <span class="next-teams">
-                        <strong>{{ $next->homeTeam->name }}</strong>
+                        <span class="next-team"><x-team-badge :team="$next->homeTeam" /><strong>{{ $next->homeTeam->name }}</strong></span>
                         <span class="next-vs">vs</span>
-                        <strong>{{ $next->awayTeam->name }}</strong>
+                        <span class="next-team"><x-team-badge :team="$next->awayTeam" /><strong>{{ $next->awayTeam->name }}</strong></span>
                     </span>
                     <span class="next-when">
                         @if ($next->status === \App\Enums\GameStatus::Rinviata)
@@ -94,7 +94,7 @@
                                 @foreach ($standings as $row)
                                     <tr @class(['leader' => $loop->first && $row->played])>
                                         <td class="pos">{{ $loop->iteration }}</td>
-                                        <td class="team-name">{{ $row->team->name }}</td>
+                                        <td class="team-name"><span class="team-line"><x-team-badge :team="$row->team" size="sm" /> {{ $row->team->name }}</span></td>
                                         <td class="num points">{{ $row->points }}</td>
                                         <td class="num">{{ $row->played }}</td>
                                         <td class="num">{{ $row->won }}</td>

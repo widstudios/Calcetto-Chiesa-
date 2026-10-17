@@ -8,7 +8,10 @@ use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -55,8 +58,11 @@ class TeamController extends Controller
         Gate::authorize('create', Team::class);
 
         $data = $this->validated($request);
-        $team = Team::create($data);
+        $team = Team::create(Arr::except($data, ['logo', 'remove_logo']));
         $team->coaches()->sync($data['coaches'] ?? []);
+        if ($error = $this->saveLogo($request, $team)) {
+            return redirect()->route('teams.edit', $team)->withErrors(['logo' => $error]);
+        }
 
         return redirect()->route('teams.show', $team)->with('status', 'Squadra creata. Ora puoi inserire i calciatori.');
     }
@@ -73,8 +79,11 @@ class TeamController extends Controller
         Gate::authorize('update', $team);
 
         $data = $this->validated($request, $team);
-        $team->update($data);
+        $team->update(Arr::except($data, ['logo', 'remove_logo']));
         $team->coaches()->sync($data['coaches'] ?? []);
+        if ($error = $this->saveLogo($request, $team)) {
+            return back()->withInput()->withErrors(['logo' => $error]);
+        }
 
         return redirect()->route('teams.show', $team)->with('status', 'Squadra aggiornata.');
     }
@@ -86,6 +95,33 @@ class TeamController extends Controller
         $team->delete();
 
         return redirect()->route('teams.index')->with('status', 'Squadra eliminata.');
+    }
+
+    /**
+     * Salva il logo caricato (o lo toglie) e cancella quello vecchio. Restituisce un errore se non riesce.
+     */
+    private function saveLogo(Request $request, Team $team): ?string
+    {
+        $disk = Storage::disk('uploads');
+        $oldLogo = $team->logo;
+
+        if ($request->hasFile('logo')) {
+            // Nome sempre nuovo, così browser e telefoni non mostrano il logo vecchio dalla cache.
+            $file = $request->file('logo');
+            $path = $disk->putFileAs('', $file, 'squadra-'.$team->id.'-'.Str::lower(Str::random(8)).'.'.$file->extension());
+            if (! $path) {
+                return 'Non sono riuscito a salvare il logo sul server. Controlla i permessi della cartella public/uploads.';
+            }
+            $team->update(['logo' => $path]);
+        } elseif ($request->boolean('remove_logo')) {
+            $team->update(['logo' => null]);
+        }
+
+        if ($oldLogo && $oldLogo !== $team->logo) {
+            $disk->delete($oldLogo);
+        }
+
+        return null;
     }
 
     /**
@@ -113,8 +149,16 @@ class TeamController extends Controller
             'coach_name' => ['nullable', 'string', 'max:255'],
             'coaches' => ['array'],
             'coaches.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Allenatore->value)],
+            'shirt_color' => ['nullable', Rule::in(array_keys(Team::SHIRT_COLORS))],
+            'shirt_color_secondary' => ['nullable', Rule::in(array_keys(Team::SHIRT_COLORS))],
+            // Niente SVG: può contenere codice che il browser eseguirebbe.
+            'logo' => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp,gif', 'max:2048'],
+            'remove_logo' => ['nullable', 'boolean'],
         ], [
             'name.unique' => 'In questo torneo esiste già una squadra con questo nome.',
+            'logo.mimes' => 'Il logo deve essere un\'immagine PNG, JPG, WEBP o GIF.',
+            'logo.max' => 'Il logo può pesare al massimo 2 MB.',
+            'logo.uploaded' => 'Il logo non è stato caricato: prova con un file più piccolo.',
         ]);
     }
 }
