@@ -22,7 +22,7 @@ class PublicSiteTest extends TestCase
 
     public function test_home_shows_game_rules(): void
     {
-        $this->get('/')->assertOk()->assertSee('Regole di gioco')->assertSee('falli cumulativi')->assertSee('Cartellino azzurro')->assertSee('Oratorio Cup');
+        $this->get('/')->assertOk()->assertSee('Regole di gioco')->assertSee('falli cumulativi')->assertSee('Oratorio Cup')->assertSee('3 tempi da 15 minuti');
     }
 
     public function test_standings_follow_points_and_goal_difference(): void
