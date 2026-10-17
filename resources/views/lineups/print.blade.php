@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex">
     <title>Distinta {{ $team->name }} · {{ \App\Models\Setting::siteName() }}</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ @filemtime(public_path('css/app.css')) }}">
+    @include('partials.theme')
 </head>
 <body class="print-page">
     <div class="print-toolbar no-print">

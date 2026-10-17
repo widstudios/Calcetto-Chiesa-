@@ -3,7 +3,6 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#052e16">
     <title>@yield('title', 'Gestionale') · {{ \App\Models\Setting::siteName() }}</title>
     @if ($logo = \App\Models\Setting::logoUrl())
         <link rel="icon" href="{{ $logo }}">
@@ -12,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ @filemtime(public_path('css/app.css')) }}">
+    @include('partials.theme')
 </head>
 @auth
     @php
@@ -55,7 +55,7 @@
                     <span>{{ auth()->user()->role->label() }}</span>
                 </div>
                 @if (auth()->user()->isAdmin())
-                    <a @class(['icon-btn', 'active' => request()->routeIs('settings.*')]) href="{{ route('settings.edit') }}" title="Impostazioni (nome e logo)" aria-label="Impostazioni"><x-icon name="settings" /></a>
+                    <a @class(['icon-btn', 'active' => request()->routeIs('settings.*')]) href="{{ route('settings.edit') }}" title="Impostazioni (nome, logo e colori)" aria-label="Impostazioni"><x-icon name="settings" /></a>
                 @endif
                 <a class="icon-btn" href="{{ route('password.edit') }}" title="Cambia password" aria-label="Cambia password"><x-icon name="key" /></a>
                 <form method="POST" action="{{ route('logout') }}">
