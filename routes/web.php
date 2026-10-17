@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DrillController;
 use App\Http\Controllers\LineupController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PlayerController;
@@ -55,7 +56,11 @@ Route::middleware('auth')->group(function () {
         Route::get('{lineup}/stampa', 'print')->name('print');
     });
 
+    // Libreria allenamenti: tutti la consultano, solo l'admin la modifica.
+    Route::get('esercizi', [DrillController::class, 'index'])->name('drills.index');
+
     Route::middleware('role:admin')->group(function () {
+        Route::resource('esercizi', DrillController::class)->except(['index', 'show'])->names('drills')->parameters(['esercizi' => 'drill']);
         Route::resource('tournaments', TournamentController::class)->except('show');
         Route::resource('coaches', CoachController::class)->except('show')->parameters(['coaches' => 'coach']);
         Route::resource('games', GameController::class)->except('show');

@@ -24,6 +24,7 @@
                 ['games.index', ['games.index', 'games.create', 'games.edit', 'games.sheet.*'], 'Calendario', 'calendar'],
                 ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
                 ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
+                ['drills.index', 'drills.*', 'Esercizi', 'cone'],
                 ['imports.index', 'imports.*', 'Importa', 'upload'],
             ]
             : [
@@ -31,6 +32,7 @@
                 ['teams.index', ['teams.index', 'teams.show', 'teams.players.*'], 'La mia rosa', 'shirt'],
                 ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
                 ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
+                ['drills.index', 'drills.*', 'Esercizi', 'cone'],
             ];
     @endphp
     <body @class(['has-nav', 'nav-wide' => count($navItems) > 6])>

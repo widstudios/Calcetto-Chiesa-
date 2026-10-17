@@ -84,5 +84,7 @@ class DatabaseSeeder extends Seeder
                     'mvp_player_id' => $game->performances()->orderByDesc('rating')->orderByDesc('goals')->value('player_id'),
                 ]);
             });
+
+        $this->call(DrillSeeder::class);
     }
 }

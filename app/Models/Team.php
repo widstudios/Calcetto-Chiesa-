@@ -88,6 +88,16 @@ class Team extends Model
     }
 
     /**
+     * Esercizi fatti negli allenamenti, segnati con l'appello.
+     *
+     * @return HasMany<TrainingDrill, $this>
+     */
+    public function trainingDrills(): HasMany
+    {
+        return $this->hasMany(TrainingDrill::class);
+    }
+
+    /**
      * Distinte della squadra, dalla più recente.
      *
      * @return HasMany<Lineup, $this>

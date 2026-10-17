@@ -53,7 +53,12 @@
                         <span class="shirt" aria-hidden="true"><x-icon name="check" /></span>
                         <div class="list-main">
                             <div class="list-title">{{ ucfirst($row->date->locale('it')->isoFormat('dddd D MMMM YYYY')) }}</div>
-                            <div class="list-meta"><span class="badge">{{ $row->done->present }} presenti su {{ $row->done->total }}</span></div>
+                            <div class="list-meta">
+                                <span class="badge">{{ $row->done->present }} presenti su {{ $row->done->total }}</span>
+                                @foreach ($row->drills as $drill)
+                                    <a class="drill-chip" href="{{ route('drills.index', ['esercizio' => $drill->id]) }}"><x-icon name="cone" /> {{ $drill->name }}</a>
+                                @endforeach
+                            </div>
                         </div>
                         <div class="actions">
                             <a class="btn small secondary" href="{{ route('teams.attendances.edit', [$team, 'data' => $row->date->toDateString()]) }}"><x-icon name="pencil" /> <span class="btn-text">Modifica</span></a>
