@@ -31,10 +31,12 @@
         <ul class="rules-list">
             <li><strong>Under 8</strong>: nati 2019-2021 · <strong>Under 9</strong>: 2018-2020, con fino a 3 sottoquota (2021) a partita.</li>
             <li><strong>Under 10</strong>: 2017-2019 · <strong>Under 11</strong>: 2016-2018 · <strong>Under 12</strong>: 2015-2017.</li>
-            <li><strong>Under 13</strong> (Ragazzi): 2014-2016 · <strong>Under 14</strong> (Giovanissimi): 2013-2015, con 1 sottoquota a partita.</li>
-            <li><strong>Under 15</strong>: 2012-2014 · <strong>Under 16</strong>: 2011-2013 · <strong>Under 17</strong>: 2010-2012.</li>
-            <li><strong>Giovani</strong>: nati nel 2011 e prima · <strong>Amatori</strong>: nati nel 1992 e prima.</li>
-            <li>Fino all'Under 17 le squadre possono essere <strong>miste</strong>, con al massimo <strong>2 ragazze fuori quota</strong> per categoria. Le squadre tutte femminili possono iscriversi nella categoria inferiore.</li>
+            <li><strong>Under 13</strong> (Ragazzi): 2014-2016 · <strong>Under 14</strong> (Giovanissimi): 2013-2015.</li>
+            <li><strong>Giovani</strong>: <strong>Under 15</strong> 2012-2014 · <strong>Under 16</strong> 2011-2013 · <strong>Under 17</strong> 2010-2012.</li>
+            <li><strong>Adulti</strong>: <strong>Open</strong> nati nel 2011 e prima · <strong>Amatori</strong> nati nel 1992 e prima.</li>
+            <li>Ragazzi, Giovanissimi, Giovani e Open possono schierare <strong>1 sottoquota a partita</strong>.</li>
+            <li>Fino all'Under 17 le squadre possono essere <strong>miste</strong>, con al massimo <strong>2 ragazze fuori quota</strong> per categoria.</li>
+            <li>Le squadre tutte femminili possono iscriversi nella <strong>categoria inferiore</strong> dall'Under 8 all'Under 11, e fino a <strong>due categorie inferiori</strong> dall'Under 12 all'Under 16.</li>
         </ul>
     </details>
 
