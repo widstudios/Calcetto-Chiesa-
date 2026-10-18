@@ -3,10 +3,12 @@
 namespace App\Enums;
 
 /**
- * Tipi di evento libero del calendario (allenamenti e partite arrivano dalle loro tabelle).
+ * Tipi di evento del calendario.
  */
 enum EventType: string
 {
+    case Allenamento = 'allenamento';
+    case Partita = 'partita';
     case Riunione = 'riunione';
     case Genitori = 'genitori';
     case Formazione = 'formazione';
@@ -16,6 +18,8 @@ enum EventType: string
     public function label(): string
     {
         return match ($this) {
+            self::Allenamento => 'Allenamento',
+            self::Partita => 'Partita',
             self::Riunione => 'Riunione',
             self::Genitori => 'Incontro genitori',
             self::Formazione => 'Formazione',

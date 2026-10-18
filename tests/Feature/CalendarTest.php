@@ -28,27 +28,26 @@ class CalendarTest extends TestCase
         $this->team->coaches()->attach($this->coach);
     }
 
-    public function test_coach_sees_trainings_games_and_events_of_the_week(): void
+    public function test_coach_sees_only_events_entered_by_hand(): void
     {
         $other = Team::factory()->create(['name' => 'Squadra Altrui']);
+        // Allenamenti ricorrenti e partite del torneo non entrano da soli nel calendario.
         $this->team->trainings()->create(['weekday' => 2, 'field' => 'Campo oratorio', 'starts_at' => '18:00', 'ends_at' => '19:30']);
-        $other->trainings()->create(['weekday' => 2, 'field' => 'Campo lontano', 'starts_at' => '17:00', 'ends_at' => '18:00']);
         Game::factory()->create([
             'tournament_id' => $this->team->tournament_id, 'home_team_id' => $this->team->id, 'away_team_id' => $other->id,
-            'kickoff_at' => '2026-10-25 15:30', 'venue' => 'Campo centrale',
+            'kickoff_at' => '2026-10-24 15:30', 'venue' => 'Campo centrale',
         ]);
         CalendarEvent::create(['title' => 'Riunione allenatori', 'type' => 'riunione', 'date' => '2026-10-19', 'starts_at' => '09:30', 'ends_at' => '11:00', 'location' => 'Sala riunioni A']);
+        CalendarEvent::create(['title' => 'Allenamento extra', 'type' => 'allenamento', 'team_id' => $this->team->id, 'date' => '2026-10-23', 'starts_at' => '17:00', 'ends_at' => '18:30', 'location' => 'Palestra']);
         CalendarEvent::create(['title' => 'Cena squadra altrui', 'type' => 'altro', 'team_id' => $other->id, 'date' => '2026-10-20', 'starts_at' => '20:00']);
         CalendarEvent::create(['title' => 'Riunione della prossima settimana', 'type' => 'riunione', 'date' => '2026-10-27', 'starts_at' => '09:30']);
 
         $this->actingAs($this->coach)->get(route('calendar.index'))->assertOk()
             ->assertSee('19 - 25 ottobre 2026')
-            ->assertSee('Allenamento Under 10 San Nicola')->assertSee('Campo oratorio')->assertSee('18:00 - 19:30')
-            ->assertSee('Campo centrale')->assertSee('15:30')
             ->assertSee('Riunione allenatori')->assertSee('Sala riunioni A')->assertSee('Tutta la società')
-            ->assertDontSee('Campo lontano')->assertDontSee('Cena squadra altrui')->assertDontSee('Riunione della prossima settimana')
-            // Allenamento di ieri: si apre l'appello di quel giorno.
-            ->assertSee(route('teams.attendances.edit', [$this->team, 'data' => '2026-10-20']), false);
+            ->assertSee('Allenamento extra')->assertSee('17:00 - 18:30')->assertSee('Palestra')
+            ->assertDontSee('Campo oratorio')->assertDontSee('Campo centrale')
+            ->assertDontSee('Cena squadra altrui')->assertDontSee('Riunione della prossima settimana');
 
         $this->get(route('calendar.index', ['settimana' => '2026-10-28']))->assertOk()
             ->assertSee('26 ottobre - 1 novembre 2026')->assertSee('Riunione della prossima settimana');
@@ -97,7 +96,7 @@ class CalendarTest extends TestCase
         ])->assertRedirect();
         $event = CalendarEvent::sole();
         $this->assertNull($event->team_id);
-        $this->get(route('calendar.index'))->assertOk()->assertSee('Formazione allenatori')->assertSee(route('games.index'), false);
+        $this->get(route('calendar.index'))->assertOk()->assertSee('Formazione allenatori');
 
         $this->actingAs($this->coach)->get(route('calendar.index'))->assertSee('Formazione allenatori')
             ->assertDontSee(route('calendar.events.edit', $event), false);

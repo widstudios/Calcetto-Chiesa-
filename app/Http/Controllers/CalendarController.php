@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\EventType;
-use App\Enums\GameStatus;
 use App\Models\CalendarEvent;
-use App\Models\Game;
 use App\Models\Team;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -17,7 +15,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
- * Calendario settimanale per allenatori e admin: allenamenti, partite ed eventi liberi insieme.
+ * Calendario settimanale per allenatori e admin, con gli eventi inseriti a mano (allenamenti, partite, riunioni...).
  */
 class CalendarController extends Controller
 {
@@ -38,9 +36,8 @@ class CalendarController extends Controller
             : CarbonImmutable::today())->startOfWeek();
         $end = $start->addDays(6);
 
-        $items = $this->trainings($teams->whereIn('id', $ids), $start)
-            ->concat($this->games($user, $ids, $start, $end))
-            ->concat($this->events($user, $ids, $start, $end));
+        // Solo gli eventi inseriti a mano: allenamenti e partite non si aggiungono da soli.
+        $items = $this->events($user, $ids, $start, $end);
 
         $today = CarbonImmutable::today();
 
@@ -148,72 +145,6 @@ class CalendarController extends Controller
             'team_id.in' => 'Puoi creare eventi solo per le tue squadre.',
             'ends_at.after' => "L'orario di fine deve venire dopo quello di inizio.",
         ]);
-    }
-
-    /**
-     * Allenamenti settimanali delle squadre, nei giorni di questa settimana.
-     *
-     * @param  Collection<int, Team>  $teams
-     * @return Collection<int, object>
-     */
-    private function trainings(Collection $teams, CarbonImmutable $start): Collection
-    {
-        $today = CarbonImmutable::today();
-
-        return $teams->load('trainings')->flatMap(fn (Team $team) => $team->trainings
-            // Orari doppi (stesso giorno, orario e campo) si mostrano una volta sola.
-            ->unique(fn ($slot) => $slot->weekday.'|'.$slot->timeRange().'|'.$slot->field)
-            ->map(function ($slot) use ($team, $start, $today) {
-                $date = $start->addDays($slot->weekday - 1);
-
-                return (object) [
-                    'date' => $date,
-                    'start' => substr($slot->starts_at, 0, 5),
-                    'time' => $slot->timeRange(),
-                    'type' => 'allenamento',
-                    'label' => 'Allenamento',
-                    'title' => 'Allenamento '.$team->name,
-                    'team' => $team->name,
-                    'place' => $slot->field,
-                    'notes' => null,
-                    'links' => [$date->lte($today)
-                        ? ['Appello', route('teams.attendances.edit', [$team, 'data' => $date->toDateString()]), 'checklist']
-                        : ['Presenze', route('teams.attendances.show', $team), 'checklist']],
-                ];
-            }));
-    }
-
-    /**
-     * Partite della settimana in cui gioca una delle squadre.
-     *
-     * @param  Collection<int, int>  $ids
-     * @return Collection<int, object>
-     */
-    private function games(User $user, Collection $ids, CarbonImmutable $start, CarbonImmutable $end): Collection
-    {
-        return Game::with(['tournament', 'homeTeam', 'awayTeam'])
-            ->whereBetween('kickoff_at', [$start->startOfDay(), $end->endOfDay()])
-            ->where(fn ($q) => $q->whereIn('home_team_id', $ids)->orWhereIn('away_team_id', $ids))
-            ->get()
-            ->map(function (Game $game) use ($user, $ids) {
-                $mine = $ids->contains($game->home_team_id) ? $game->homeTeam : $game->awayTeam;
-                $links = $user->isAdmin()
-                    ? [['Modifica', route('games.edit', $game), 'pencil'], ['Tabellino', route('games.sheet.edit', $game), 'ball']]
-                    : [['Distinta', route('teams.lineups.create', [$mine, 'partita' => $game->id]), 'clipboard']];
-
-                return (object) [
-                    'date' => CarbonImmutable::instance($game->kickoff_at)->startOfDay(),
-                    'start' => $game->kickoff_at->format('H:i'),
-                    'time' => $game->kickoff_at->format('H:i'),
-                    'type' => 'partita',
-                    'label' => $game->status === GameStatus::Programmata ? 'Partita' : 'Partita '.strtolower($game->status->label()),
-                    'title' => $game->homeTeam->name.($game->isPlayed() ? " {$game->home_score}-{$game->away_score} " : ' - ').$game->awayTeam->name,
-                    'team' => $game->tournament->name.($game->matchday ? ' · '.$game->matchday.'ª giornata' : ''),
-                    'place' => $game->venue,
-                    'notes' => null,
-                    'links' => $links,
-                ];
-            });
     }
 
     /**

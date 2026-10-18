@@ -5,7 +5,7 @@
 @section('content')
     @php
         $query = fn ($week) => array_filter(['settimana' => $week->toDateString(), 'squadra' => $team?->id]);
-        $legend = ['allenamento' => 'Allenamento', 'partita' => 'Partita'] + collect(App\Enums\EventType::cases())->mapWithKeys(fn ($t) => [$t->value => $t->label()])->all();
+        $legend = collect(App\Enums\EventType::cases())->mapWithKeys(fn ($t) => [$t->value => $t->label()])->all();
         $range = $start->month === $end->month
             ? $start->format('j').' - '.$end->locale('it')->isoFormat('D MMMM YYYY')
             : $start->locale('it')->isoFormat('D MMMM').' - '.$end->locale('it')->isoFormat('D MMMM YYYY');
@@ -15,7 +15,7 @@
         <div>
             <span class="eyebrow">{{ $team?->name ?? (auth()->user()->isAdmin() ? 'Tutte le squadre' : 'Le mie squadre') }}</span>
             <h1>Calendario</h1>
-            <p class="muted">Allenamenti, partite e impegni della settimana.</p>
+            <p class="muted">Allenamenti, partite e impegni della settimana, inseriti a mano.</p>
         </div>
         <div class="actions">
             @if (auth()->user()->isAdmin())
