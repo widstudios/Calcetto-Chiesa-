@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class CsiDocument extends Model
 {
-    protected $fillable = ['drive_id', 'name', 'mime_type', 'size', 'drive_modified_at', 'path', 'downloaded_at'];
+    protected $fillable = ['drive_id', 'name', 'mime_type', 'size', 'drive_modified_at', 'path', 'downloaded_at', 'imported_at', 'games_found', 'games_saved', 'import_note'];
 
     protected function casts(): array
     {
@@ -17,6 +17,9 @@ class CsiDocument extends Model
             'size' => 'integer',
             'drive_modified_at' => 'datetime',
             'downloaded_at' => 'datetime',
+            'imported_at' => 'datetime',
+            'games_found' => 'integer',
+            'games_saved' => 'integer',
         ];
     }
 

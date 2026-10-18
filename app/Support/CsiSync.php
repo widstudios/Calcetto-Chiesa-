@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 /**
  * Sincronizzazione con la cartella Google Drive pubblica dell'Oratorio Cup (CSI Roma):
@@ -36,7 +37,7 @@ class CsiSync
     /**
      * Controlla la cartella e scarica quello che manca.
      *
-     * @return array{new: int, updated: int, total: int}
+     * @return array{new: int, updated: int, total: int, games: int}
      */
     public function run(): array
     {
@@ -45,7 +46,8 @@ class CsiSync
         }
 
         try {
-            $summary = ['new' => 0, 'updated' => 0, 'total' => 0];
+            $summary = ['new' => 0, 'updated' => 0, 'total' => 0, 'games' => 0];
+            $downloaded = [];
 
             foreach ($this->files() as $file) {
                 // Cartelle e documenti Google (Documenti, Fogli) non si scaricano come file.
@@ -86,6 +88,12 @@ class CsiSync
                     'path' => $path,
                     'downloaded_at' => now(),
                 ])->save();
+                $downloaded[] = $document;
+            }
+
+            // Dal più vecchio al più nuovo, così vale l'ultimo risultato pubblicato.
+            foreach (collect($downloaded)->sortBy('drive_modified_at') as $document) {
+                $summary['games'] += $this->import($document);
             }
 
             Setting::put('csi_synced_at', now()->toIso8601String());
@@ -98,6 +106,35 @@ class CsiSync
 
             throw new RuntimeException($message, previous: $e);
         }
+    }
+
+    /**
+     * Legge le partite di un comunicato PDF e le porta nel calendario.
+     *
+     * @return int partite create o aggiornate
+     */
+    public function import(CsiDocument $document): int
+    {
+        if (! $document->isPdf() || ! $document->path) {
+            return 0;
+        }
+
+        try {
+            $result = (new CsiImport)->apply(CsiCommunique::parseFile(Storage::disk(self::DISK)->path($document->path)));
+        } catch (Throwable $e) {
+            // Un PDF che non si legge non deve fermare gli altri.
+            report($e);
+            $result = ['found' => 0, 'saved' => 0, 'notes' => ['Non sono riuscito a leggere questo PDF.']];
+        }
+
+        $document->update([
+            'imported_at' => now(),
+            'games_found' => $result['found'],
+            'games_saved' => $result['saved'],
+            'import_note' => implode(' ', $result['notes']) ?: null,
+        ]);
+
+        return $result['saved'];
     }
 
     /** @return list<array<string, mixed>> */

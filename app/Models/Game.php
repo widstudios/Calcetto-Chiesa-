@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Una partita del calendario. Si chiama "Game" perché "match" è una parola riservata in PHP.
  */
-#[Fillable(['tournament_id', 'home_team_id', 'away_team_id', 'matchday', 'kickoff_at', 'venue', 'home_score', 'away_score', 'mvp_player_id', 'status'])]
+#[Fillable(['tournament_id', 'home_team_id', 'away_team_id', 'matchday', 'kickoff_at', 'venue', 'home_score', 'away_score', 'mvp_player_id', 'status', 'csi_code'])]
 class Game extends Model
 {
     /** @use HasFactory<GameFactory> */
