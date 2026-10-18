@@ -21,7 +21,7 @@
                 ['tournaments.index', 'tournaments.*', 'Tornei', 'trophy'],
                 ['teams.index', ['teams.index', 'teams.create', 'teams.show', 'teams.edit', 'teams.players.*'], 'Squadre', 'users'],
                 ['coaches.index', 'coaches.*', 'Allenatori', 'coach'],
-                ['games.index', ['games.index', 'games.create', 'games.edit', 'games.sheet.*'], 'Calendario', 'calendar'],
+                ['calendar.index', ['calendar.*', 'games.index', 'games.create', 'games.edit', 'games.sheet.*'], 'Calendario', 'calendar'],
                 ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
                 ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
                 ['drills.index', 'drills.*', 'Esercizi', 'cone'],
@@ -30,6 +30,7 @@
             : [
                 ['dashboard', 'dashboard', 'Home', 'home'],
                 ['teams.index', ['teams.index', 'teams.show', 'teams.players.*'], 'La mia rosa', 'shirt'],
+                ['calendar.index', 'calendar.*', 'Calendario', 'calendar'],
                 ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
                 ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
                 ['drills.index', 'drills.*', 'Esercizi', 'cone'],

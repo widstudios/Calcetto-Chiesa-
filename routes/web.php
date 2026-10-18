@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrillController;
 use App\Http\Controllers\LineupController;
@@ -59,6 +60,10 @@ Route::middleware('auth')->group(function () {
         Route::get('{lineup}/stampa', 'print')->name('print');
         Route::get('{lineup}/pdf', 'pdf')->name('pdf');
     });
+
+    // Calendario settimanale: allenamenti, partite ed eventi (riunioni, incontri...) delle proprie squadre.
+    Route::get('calendario', [CalendarController::class, 'index'])->name('calendar.index');
+    Route::resource('calendario/eventi', CalendarController::class)->except(['index', 'show'])->names('calendar.events')->parameters(['eventi' => 'event']);
 
     // Libreria allenamenti: tutti la consultano, solo l'admin la modifica.
     Route::get('esercizi', [DrillController::class, 'index'])->name('drills.index');
