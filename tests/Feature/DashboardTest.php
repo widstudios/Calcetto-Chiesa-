@@ -45,4 +45,19 @@ class DashboardTest extends TestCase
             ->assertDontSee('Altra Squadra')
             ->assertDontSee('Estraneo');
     }
+
+    public function test_guide_is_linked_and_open_to_logged_in_users(): void
+    {
+        $this->get('/guida')->assertRedirect('/login');
+
+        $coach = User::factory()->create();
+        Team::factory()->withCoachAccount($coach)->create();
+
+        $this->actingAs($coach)->get('/dashboard')->assertOk()->assertSee(route('guide'));
+        $this->actingAs($coach)->get('/guida')
+            ->assertOk()
+            ->assertSee('Guida all&#039;app', false)
+            ->assertSee('Fai appello')
+            ->assertSee('Salva distinta');
+    }
 }

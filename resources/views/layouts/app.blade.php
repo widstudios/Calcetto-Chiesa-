@@ -58,6 +58,7 @@
                 @if (auth()->user()->isAdmin())
                     <a @class(['icon-btn', 'active' => request()->routeIs('settings.*')]) href="{{ route('settings.edit') }}" title="Impostazioni (nome, logo e colori)" aria-label="Impostazioni"><x-icon name="settings" /></a>
                 @endif
+                <a @class(['icon-btn', 'active' => request()->routeIs('guide')]) href="{{ route('guide') }}" title="Guida all'app" aria-label="Guida all'app"><x-icon name="help" /></a>
                 <a class="icon-btn" href="{{ route('password.edit') }}" title="Cambia password" aria-label="Cambia password"><x-icon name="key" /></a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
