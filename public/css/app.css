@@ -810,3 +810,10 @@ table.sheet input[type=radio] { width: 22px; height: 22px; accent-color: var(--a
     .print-page { background: #fff; }
     .distinta { max-width: none; margin: 0; padding: 0; box-shadow: none; }
 }
+
+/* Guida per i mister */
+.guide-toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.guide h3 { margin: 20px 0 8px; font-size: 1.125rem; color: var(--primary-strong); }
+.guide ol, .guide ul { margin: 0 0 12px; padding-left: 22px; }
+.guide li { margin-bottom: 6px; }
+.guide .table-wrap { margin: 0 0 12px; }

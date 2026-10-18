@@ -8,6 +8,7 @@
             <span class="eyebrow">Ciao {{ auth()->user()->name }}</span>
             <h1>La mia squadra</h1>
         </div>
+        <a class="btn secondary" href="{{ route('guide') }}"><x-icon name="help" /> Guida all'app</a>
     </div>
 
     @forelse ($teams as $team)

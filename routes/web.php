@@ -34,6 +34,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('/password', [PasswordController::class, 'update'])->middleware('throttle:5,1')->name('password.update');
 
+    // Guida all'uso dell'app per i mister.
+    Route::view('guida', 'guide.index')->name('guide');
+
     // Squadre: l'admin le gestisce tutte, l'allenatore vede e modifica la rosa delle sue.
     Route::resource('teams', TeamController::class);
     Route::get('teams/{team}/pdf', [TeamController::class, 'pdf'])->name('teams.pdf');
