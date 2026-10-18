@@ -21,7 +21,7 @@
             @if (auth()->user()->isAdmin())
                 <a class="btn secondary" href="{{ route('games.index') }}"><x-icon name="trophy" /> Partite</a>
             @endif
-            @if (auth()->user()->isAdmin() || $teams->isNotEmpty())
+            @if (auth()->user()->isAdmin())
                 <a class="btn" href="{{ route('calendar.events.create', array_filter(['squadra' => $team?->id])) }}"><x-icon name="plus" /> Nuovo evento</a>
             @endif
         </div>
@@ -60,7 +60,7 @@
                     <span class="cal-dow">{{ ucfirst($day->date->locale('it')->isoFormat('ddd')) }}</span>
                     <span class="cal-num">{{ $day->date->day }}</span>
                     <span class="cal-month">{{ $day->date->locale('it')->isoFormat('MMM') }}</span>
-                    @if (auth()->user()->isAdmin() || $teams->isNotEmpty())
+                    @if (auth()->user()->isAdmin())
                         <a class="cal-add" href="{{ route('calendar.events.create', array_filter(['data' => $day->date->toDateString(), 'squadra' => $team?->id])) }}" title="Nuovo evento il {{ $day->date->format('d/m') }}" aria-label="Nuovo evento il {{ $day->date->format('d/m') }}"><x-icon name="plus" /></a>
                     @endif
                 </header>

@@ -63,12 +63,12 @@ Route::middleware('auth')->group(function () {
 
     // Calendario settimanale: allenamenti, partite ed eventi (riunioni, incontri...) delle proprie squadre.
     Route::get('calendario', [CalendarController::class, 'index'])->name('calendar.index');
-    Route::resource('calendario/eventi', CalendarController::class)->except(['index', 'show'])->names('calendar.events')->parameters(['eventi' => 'event']);
 
     // Libreria allenamenti: tutti la consultano, solo l'admin la modifica.
     Route::get('esercizi', [DrillController::class, 'index'])->name('drills.index');
 
     Route::middleware('role:admin')->group(function () {
+        Route::resource('calendario/eventi', CalendarController::class)->except(['index', 'show'])->names('calendar.events')->parameters(['eventi' => 'event']);
         Route::resource('esercizi', DrillController::class)->except(['index', 'show'])->names('drills')->parameters(['esercizi' => 'drill']);
         Route::resource('tournaments', TournamentController::class)->except('show');
         Route::resource('coaches', CoachController::class)->except('show')->parameters(['coaches' => 'coach']);

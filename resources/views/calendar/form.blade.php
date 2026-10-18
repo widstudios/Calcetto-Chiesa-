@@ -24,13 +24,9 @@
                 @include('partials.error', ['field' => 'type'])
             </div>
             <div>
-                <label for="team_id">Per {{ auth()->user()->isAdmin() ? '' : '*' }}</label>
-                <select id="team_id" name="team_id" @unless (auth()->user()->isAdmin()) required @endunless @error('team_id') aria-invalid="true" @enderror>
-                    @if (auth()->user()->isAdmin())
-                        <option value="">Tutta la società</option>
-                    @elseif ($teams->count() > 1)
-                        <option value=""></option>
-                    @endif
+                <label for="team_id">Per</label>
+                <select id="team_id" name="team_id" @error('team_id') aria-invalid="true" @enderror>
+                    <option value="">Tutta la società</option>
                     @foreach ($teams as $team)
                         <option value="{{ $team->id }}" @selected(old('team_id', $event->team_id) == $team->id)>{{ $team->name }}</option>
                     @endforeach

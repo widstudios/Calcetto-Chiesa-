@@ -54,37 +54,33 @@ class CalendarTest extends TestCase
             ->assertSee('26 ottobre - 1 novembre 2026')->assertSee('Riunione della prossima settimana');
     }
 
-    public function test_coach_creates_events_only_for_own_teams(): void
+    public function test_admin_creates_edits_and_deletes_team_events(): void
     {
-        $other = Team::factory()->create();
+        $admin = User::factory()->admin()->create();
 
-        $this->actingAs($this->coach)->get(route('calendar.events.create', ['data' => '2026-10-22']))->assertOk()->assertSee('2026-10-22');
-
-        $this->post(route('calendar.events.store'), [
-            'title' => 'Incontro genitori', 'type' => 'genitori', 'team_id' => $other->id,
-            'date' => '2026-10-22', 'starts_at' => '18:00',
-        ])->assertSessionHasErrors('team_id');
-        $this->post(route('calendar.events.store'), [
-            'title' => 'Incontro genitori', 'type' => 'genitori',
-            'date' => '2026-10-22', 'starts_at' => '18:00',
-        ])->assertSessionHasErrors('team_id');
-
+        $this->actingAs($admin)->get(route('calendar.events.create', ['data' => '2026-10-22']))->assertOk()->assertSee('2026-10-22');
         $this->post(route('calendar.events.store'), [
             'title' => 'Incontro genitori', 'type' => 'genitori', 'team_id' => $this->team->id,
             'date' => '2026-10-22', 'starts_at' => '18:00', 'ends_at' => '19:00', 'location' => 'Salone',
         ])->assertRedirect(route('calendar.index', ['settimana' => '2026-10-19']));
 
         $event = CalendarEvent::sole();
-        $this->assertSame($this->coach->id, $event->user_id);
-        $this->get(route('calendar.index'))->assertSee('Incontro genitori')->assertSee('18:00 - 19:00')
-            ->assertSee(route('calendar.events.edit', $event), false);
-
+        $this->assertSame($admin->id, $event->user_id);
         $this->put(route('calendar.events.update', $event), [
             'title' => 'Incontro genitori Under 10', 'type' => 'genitori', 'team_id' => $this->team->id,
             'date' => '2026-10-22', 'starts_at' => '18:00', 'ends_at' => '17:00',
         ])->assertSessionHasErrors('ends_at');
 
-        $this->delete(route('calendar.events.destroy', $event))->assertRedirect();
+        // L'allenatore della squadra vede l'evento ma non può crearne, modificarlo o eliminarlo.
+        $this->actingAs($this->coach)->get(route('calendar.index'))->assertSee('Incontro genitori')->assertSee('18:00 - 19:00')
+            ->assertDontSee('Nuovo evento')->assertDontSee(route('calendar.events.edit', $event), false);
+        $this->get(route('calendar.events.create'))->assertForbidden();
+        $this->post(route('calendar.events.store'), [
+            'title' => 'Cena', 'type' => 'altro', 'team_id' => $this->team->id, 'date' => '2026-10-22', 'starts_at' => '20:00',
+        ])->assertForbidden();
+        $this->get(route('calendar.events.edit', $event))->assertForbidden();
+
+        $this->actingAs($admin)->delete(route('calendar.events.destroy', $event))->assertRedirect();
         $this->assertModelMissing($event);
     }
 

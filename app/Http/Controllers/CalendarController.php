@@ -12,12 +12,12 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
  * Calendario settimanale per allenatori e admin: allenamenti, partite ed eventi liberi insieme.
+ * Gli eventi liberi li inserisce solo l'admin (rotte nel gruppo role:admin), gli allenatori li vedono.
  */
 class CalendarController extends Controller
 {
@@ -59,8 +59,6 @@ class CalendarController extends Controller
 
     public function create(Request $request): View
     {
-        Gate::authorize('create', CalendarEvent::class);
-
         $date = rescue(fn () => CarbonImmutable::createFromFormat('!Y-m-d', (string) $request->query('data')), null, false);
         $teams = $this->teamsOf($request->user());
 
@@ -68,7 +66,7 @@ class CalendarController extends Controller
             'event' => new CalendarEvent([
                 'type' => EventType::Riunione,
                 'date' => $date ?? CarbonImmutable::today(),
-                'team_id' => $teams->firstWhere('id', $request->integer('squadra'))?->id ?? ($request->user()->isAdmin() ? null : $teams->first()?->id),
+                'team_id' => $teams->firstWhere('id', $request->integer('squadra'))?->id,
             ]),
             'teams' => $teams,
         ]);
@@ -76,25 +74,19 @@ class CalendarController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Gate::authorize('create', CalendarEvent::class);
-
         $event = CalendarEvent::create($this->validated($request) + ['user_id' => $request->user()->id]);
 
         return redirect()->route('calendar.index', ['settimana' => $event->date->startOfWeek()->toDateString()])
             ->with('status', 'Evento aggiunto al calendario.');
     }
 
-    public function edit(Request $request, CalendarEvent $event): View
+    public function edit(CalendarEvent $event): View
     {
-        Gate::authorize('update', $event);
-
-        return view('calendar.form', ['event' => $event, 'teams' => $this->teamsOf($request->user())]);
+        return view('calendar.form', ['event' => $event, 'teams' => Team::orderBy('name')->get()]);
     }
 
     public function update(Request $request, CalendarEvent $event): RedirectResponse
     {
-        Gate::authorize('update', $event);
-
         $event->update($this->validated($request));
 
         return redirect()->route('calendar.index', ['settimana' => $event->date->startOfWeek()->toDateString()])
@@ -103,8 +95,6 @@ class CalendarController extends Controller
 
     public function destroy(CalendarEvent $event): RedirectResponse
     {
-        Gate::authorize('delete', $event);
-
         $week = $event->date->startOfWeek()->toDateString();
         $event->delete();
 
@@ -129,23 +119,17 @@ class CalendarController extends Controller
      */
     private function validated(Request $request): array
     {
-        $user = $request->user();
-
         return $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::enum(EventType::class)],
-            // L'allenatore sceglie una delle sue squadre; solo l'admin crea eventi di tutta la società.
-            'team_id' => $user->isAdmin()
-                ? ['nullable', 'integer', 'exists:teams,id']
-                : ['required', 'integer', Rule::in($this->teamsOf($user)->pluck('id')->all())],
+            // Vuota = evento di tutta la società.
+            'team_id' => ['nullable', 'integer', 'exists:teams,id'],
             'date' => ['required', 'date_format:Y-m-d'],
             'starts_at' => ['required', 'date_format:H:i'],
             'ends_at' => ['nullable', 'date_format:H:i', 'after:starts_at'],
             'location' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ], [
-            'team_id.required' => 'Scegli la squadra.',
-            'team_id.in' => 'Puoi creare eventi solo per le tue squadre.',
             'ends_at.after' => "L'orario di fine deve venire dopo quello di inizio.",
         ]);
     }
@@ -238,7 +222,7 @@ class CalendarController extends Controller
                 'team' => $event->team?->name ?? 'Tutta la società',
                 'place' => $event->location,
                 'notes' => $event->notes,
-                'links' => $user->can('update', $event) ? [['Modifica', route('calendar.events.edit', $event), 'pencil']] : [],
+                'links' => $user->isAdmin() ? [['Modifica', route('calendar.events.edit', $event), 'pencil']] : [],
             ]);
     }
 }
