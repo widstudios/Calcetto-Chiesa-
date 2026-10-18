@@ -57,7 +57,9 @@ class CsiSync
                 $document = CsiDocument::firstOrNew(['drive_id' => $file['id']]);
                 $modified = isset($file['modifiedTime']) ? Carbon::parse($file['modifiedTime']) : null;
 
-                if ($document->exists && $document->path && $modified && $document->drive_modified_at?->timestamp === $modified->timestamp) {
+                // Già scaricato e uguale su Drive: si salta, a meno che la copia sul server sia sparita.
+                $unchanged = $modified && $document->drive_modified_at?->timestamp === $modified->timestamp;
+                if ($document->exists && $document->path && $unchanged && Storage::disk(self::DISK)->exists($document->path)) {
                     continue;
                 }
 
@@ -65,7 +67,13 @@ class CsiSync
                 $oldPath = $document->path;
                 $path = self::DIR.'/'.$file['id'].'-'.Str::slug(pathinfo($file['name'], PATHINFO_FILENAME)).'.'.(Str::lower(pathinfo($file['name'], PATHINFO_EXTENSION)) ?: 'bin');
 
-                Storage::disk(self::DISK)->put($path, $this->download($file['id']));
+                if (! Storage::disk(self::DISK)->put($path, $this->download($file['id']))) {
+                    // Disco pieno o cartella non scrivibile: non si segna come scaricato, così si riprova.
+                    $message = 'Non sono riuscito a salvare «'.$file['name'].'» sul server. Controlla lo spazio e i permessi della cartella storage.';
+                    Setting::put('csi_sync_error', $message);
+
+                    throw new RuntimeException($message);
+                }
                 if ($oldPath && $oldPath !== $path) {
                     Storage::disk(self::DISK)->delete($oldPath);
                 }

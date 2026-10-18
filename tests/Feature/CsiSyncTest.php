@@ -53,6 +53,11 @@ class CsiSyncTest extends TestCase
         $this->artisan('csi:sync')->expectsOutputToContain('Nuovi: 0. Aggiornati: 0')->assertSuccessful();
         Http::assertSentCount(3);
 
+        // La copia sul server è sparita (pulizia, ripristino): si riscarica anche se su Drive non è cambiata.
+        Storage::disk('local')->delete($document->path);
+        $this->artisan('csi:sync')->expectsOutputToContain('Aggiornati: 1')->assertSuccessful();
+        Storage::disk('local')->assertExists($document->path);
+
         // Il CSI ricarica il comunicato corretto: si scarica di nuovo.
         $files[0]['modifiedTime'] = '2026-10-23T09:00:00Z';
         $this->artisan('csi:sync')->expectsOutputToContain('Aggiornati: 1')->assertSuccessful();
@@ -88,6 +93,19 @@ class CsiSyncTest extends TestCase
         $this->actingAs($admin)->post('/comunicati-csi/sincronizza')->assertSessionHasErrors('sync');
         $this->assertStringContainsString('chiave API', Setting::get('csi_sync_error'));
         $this->artisan('csi:sync')->assertFailed();
+    }
+
+    public function test_failed_write_is_not_marked_as_downloaded(): void
+    {
+        $files = [['id' => 'cu1', 'name' => 'CU 1.pdf', 'mimeType' => 'application/pdf', 'size' => '2048', 'modifiedTime' => '2026-10-22T18:00:00Z']];
+        $this->fakeDrive($files);
+        $disk = \Mockery::mock(Storage::disk('local'))->makePartial();
+        $disk->shouldReceive('put')->andReturnFalse();
+        Storage::set('local', $disk);
+
+        $this->artisan('csi:sync')->expectsOutputToContain('Non sono riuscito a salvare')->assertFailed();
+        $this->assertSame(0, CsiDocument::count());
+        $this->assertStringContainsString('CU 1.pdf', Setting::get('csi_sync_error'));
     }
 
     public function test_missing_key_is_shown(): void
