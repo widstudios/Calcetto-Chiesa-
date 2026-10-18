@@ -66,6 +66,13 @@ class AttendanceLineupTest extends TestCase
             ->assertSee('1 presenti su 2')
             ->assertSee('50%');
 
+        // Appello del 14 già fatto: in alto c'è il prossimo (21/10) senza conteggi, che restano negli appelli fatti.
+        $this->team->trainings()->create(['weekday' => 3, 'field' => 'Oratorio', 'starts_at' => '18:00', 'ends_at' => '19:30']);
+        $page = $this->get(route('teams.attendances.show', $this->team))
+            ->assertSee('21/10/2026')->assertSee('Prossimo appello')->assertDontSee('Appello da fare')
+            ->assertSee('Mercoledì · 18:00 - 19:30')->assertDontSee('18:00 - 19:30, 18:00 - 19:30');
+        $this->assertSame(1, substr_count($page->getContent(), '2 presenti su 2'));
+
         $this->delete(route('teams.attendances.destroy', $this->team), ['data' => '2026-10-07'])->assertRedirect();
         $this->assertSame(2, Attendance::count());
     }

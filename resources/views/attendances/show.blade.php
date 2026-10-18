@@ -8,7 +8,7 @@
     <section class="card flush">
         <div class="card-head">
             <h2><x-icon name="checklist" /> Appello</h2>
-            <span class="badge">{{ $team->trainings->count() }} a settimana</span>
+            <span class="badge">{{ $trainings->sum(fn ($row) => $row->slots->count()) }} a settimana</span>
         </div>
         @if ($trainings->isEmpty())
             <div class="empty"><x-icon name="calendar" /><p>Nessun orario di allenamento. Aggiungilo nella pagina della squadra per fare l'appello.</p></div>
@@ -16,24 +16,26 @@
             <ul class="list" style="margin-top: 8px">
                 @foreach ($trainings as $row)
                     <li class="list-item">
-                        <span @class(['shirt', 'none' => ! $row->done]) aria-hidden="true"><x-icon :name="$row->done ? 'check' : 'calendar'" /></span>
+                        <span @class(['shirt', 'none' => $row->done]) aria-hidden="true"><x-icon name="calendar" /></span>
                         <div class="list-main">
                             <div class="list-title">{{ $row->slots->first()->weekdayName() }} · {{ $row->slots->map->timeRange()->join(', ') }}</div>
                             <div class="list-meta">
                                 <span>Campo: {{ $row->slots->pluck('field')->unique()->join(', ') }}</span>
                                 <span>{{ $row->date->isToday() ? 'Oggi' : $row->date->format('d/m/Y') }}</span>
                                 @if ($row->done)
-                                    <span class="badge">{{ $row->done->present }} presenti su {{ $row->done->total }}</span>
+                                    <span class="badge grey">Prossimo appello</span>
                                 @else
                                     <span class="badge gold">Appello da fare</span>
                                 @endif
                             </div>
                         </div>
-                        <div class="actions">
-                            <a @class(['btn small', 'secondary' => $row->done]) href="{{ route('teams.attendances.edit', [$team, 'data' => $row->date->toDateString()]) }}">
-                                <x-icon :name="$row->done ? 'pencil' : 'checklist'" /> <span class="btn-text">{{ $row->done ? 'Modifica' : 'Fai appello' }}</span>
-                            </a>
-                        </div>
+                        @unless ($row->done)
+                            <div class="actions">
+                                <a class="btn small" href="{{ route('teams.attendances.edit', [$team, 'data' => $row->date->toDateString()]) }}">
+                                    <x-icon name="checklist" /> <span class="btn-text">Fai appello</span>
+                                </a>
+                            </div>
+                        @endunless
                     </li>
                 @endforeach
             </ul>

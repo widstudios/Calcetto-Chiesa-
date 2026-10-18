@@ -53,10 +53,17 @@ class AttendanceController extends Controller
         return view('attendances.show', [
             'team' => $team,
             // Due orari nello stesso giorno sono un solo appello: le presenze si segnano per data.
-            'trainings' => $team->trainings->groupBy('weekday')->map(function ($slots, $weekday) use ($today, $byDate, $count) {
+            // Qui solo l'appello da fare: se l'ultimo è già fatto si indica il prossimo, i conteggi stanno negli appelli fatti.
+            'trainings' => $team->trainings->groupBy('weekday')->map(function ($slots, $weekday) use ($today, $byDate) {
                 $date = $today->subDays(($today->dayOfWeekIso - $weekday + 7) % 7);
+                $done = $byDate->has($date->toDateString());
 
-                return (object) ['slots' => $slots, 'date' => $date, 'done' => $count($byDate->get($date->toDateString()))];
+                return (object) [
+                    // Orari doppi (stesso orario e campo inseriti due volte) si mostrano una volta sola.
+                    'slots' => $slots->unique(fn ($slot) => $slot->timeRange().'|'.$slot->field)->values(),
+                    'date' => $done ? $date->addWeek() : $date,
+                    'done' => $done,
+                ];
             })->values(),
             // Appelli già fatti, dal più recente.
             'history' => $byDate->sortKeysDesc()->map(fn ($rows, $date) => (object) [
