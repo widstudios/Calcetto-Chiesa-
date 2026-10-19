@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rules\Password;
@@ -51,16 +52,21 @@ class UserController extends Controller
             unset($data['password']);
         }
 
-        if ($user->isAdmin() && Role::from($data['role']) !== Role::Admin) {
-            if ($user->is($request->user())) {
-                return back()->withInput()->withErrors(['role' => 'Non puoi toglierti da solo il ruolo di amministratore: chiedilo a un altro admin.']);
-            }
-            if ($this->isLastAdmin($user)) {
-                return back()->withInput()->withErrors(['role' => 'Deve restare almeno un amministratore.']);
-            }
+        $demoting = $user->isAdmin() && Role::from($data['role']) !== Role::Admin;
+        if ($demoting && $user->is($request->user())) {
+            return back()->withInput()->withErrors(['role' => 'Non puoi toglierti da solo il ruolo di amministratore: chiedilo a un altro admin.']);
         }
 
-        $user->update($data);
+        $saved = DB::transaction(function () use ($user, $data, $demoting) {
+            if ($demoting && $this->isLastAdmin($user)) {
+                return false;
+            }
+
+            return $user->update($data);
+        });
+        if (! $saved) {
+            return back()->withInput()->withErrors(['role' => 'Deve restare almeno un amministratore.']);
+        }
 
         return redirect()->route('users.index')->with('status', 'Utente aggiornato.');
     }
@@ -70,18 +76,21 @@ class UserController extends Controller
         if ($user->is($request->user())) {
             return back()->withErrors(['user' => 'Non puoi eliminare il tuo account.']);
         }
-        if ($user->isAdmin() && $this->isLastAdmin($user)) {
+        $deleted = DB::transaction(fn () => ! ($user->isAdmin() && $this->isLastAdmin($user)) && $user->delete());
+        if (! $deleted) {
             return back()->withErrors(['user' => 'Deve restare almeno un amministratore.']);
         }
-
-        $user->delete();
 
         return redirect()->route('users.index')->with('status', 'Account di '.$user->name.' eliminato.');
     }
 
+    /**
+     * Da chiamare dentro una transazione: blocca le righe degli admin, così due admin
+     * che si tolgono il ruolo a vicenda nello stesso momento non lasciano l'app senza admin.
+     */
     private function isLastAdmin(User $user): bool
     {
-        return ! User::where('role', Role::Admin)->whereKeyNot($user->getKey())->exists();
+        return User::where('role', Role::Admin)->lockForUpdate()->pluck('id')->reject(fn ($id) => $id === $user->getKey())->isEmpty();
     }
 
     /**

@@ -86,4 +86,19 @@ class UserRoleTest extends TestCase
         $this->assertSame('Nome Nuovo', $coach->fresh()->name);
         $this->assertSame($coach->password, $coach->fresh()->password);
     }
+
+    public function test_last_admin_cannot_be_demoted_or_deleted(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $other = User::factory()->admin()->create();
+        // Situazione limite: chi agisce è appena stato declassato da un altro admin.
+        $admin->update(['role' => Role::Allenatore]);
+        $admin->role = Role::Admin;
+
+        $this->actingAs($admin)->put(route('users.update', $other), ['name' => $other->name, 'email' => $other->email, 'role' => 'allenatore'])
+            ->assertSessionHasErrors('role');
+        $this->actingAs($admin)->delete(route('users.destroy', $other))->assertSessionHasErrors('user');
+
+        $this->assertSame(Role::Admin, $other->fresh()->role);
+    }
 }
