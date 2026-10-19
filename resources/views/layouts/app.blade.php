@@ -25,6 +25,7 @@
                 ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
                 ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
                 ['drills.index', 'drills.*', 'Esercizi', 'cone'],
+                ['documents.index', 'documents.*', 'Documenti', 'file'],
                 ['imports.index', 'imports.*', 'Importa', 'upload'],
             ]
             : [
@@ -34,6 +35,7 @@
                 ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
                 ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
                 ['drills.index', 'drills.*', 'Esercizi', 'cone'],
+                ['documents.index', 'documents.*', 'Documenti', 'file'],
             ];
     @endphp
     <body @class(['has-nav', 'nav-wide' => count($navItems) > 6])>

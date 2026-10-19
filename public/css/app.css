@@ -817,3 +817,7 @@ table.sheet input[type=radio] { width: 22px; height: 22px; accent-color: var(--a
 .guide ol, .guide ul { margin: 0 0 12px; padding-left: 22px; }
 .guide li { margin-bottom: 6px; }
 .guide .table-wrap { margin: 0 0 12px; }
+
+/* Documenti: estensione del file al posto della maglia, elenco persone solo con "Scegli le persone". */
+.doc-ext { font-size: .6875rem; font-weight: 700; letter-spacing: .02em; }
+.doc-visibility:not(:has(input[value=scelta]:checked)) .doc-people { display: none; }
