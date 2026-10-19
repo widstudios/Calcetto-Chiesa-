@@ -139,4 +139,29 @@ class DocumentTest extends TestCase
         $this->delete(route('documents.destroy', $document))->assertRedirect();
         $this->assertSame(0, Document::count());
     }
+
+    public function test_old_file_is_kept_when_the_new_one_cannot_be_saved(): void
+    {
+        $this->actingAs($this->coach)->post(route('documents.store'), [
+            'title' => 'Orari',
+            'file' => UploadedFile::fake()->create('orari.pdf', 10, 'application/pdf'),
+            'visibility' => 'tutti',
+        ]);
+        $document = Document::sole();
+
+        // Disco che non riesce a scrivere: store() restituisce false.
+        $disk = Storage::disk(Document::DISK);
+        $broken = \Mockery::mock($disk)->makePartial();
+        $broken->shouldReceive('putFileAs')->andReturn(false);
+        Storage::set(Document::DISK, $broken);
+
+        $this->put(route('documents.update', $document), [
+            'title' => 'Orari nuovi',
+            'file' => UploadedFile::fake()->create('orari-2.pdf', 10, 'application/pdf'),
+            'visibility' => 'tutti',
+        ])->assertSessionHasErrors('file');
+
+        $this->assertSame('orari.pdf', $document->fresh()->original_name);
+        $disk->assertExists($document->path);
+    }
 }

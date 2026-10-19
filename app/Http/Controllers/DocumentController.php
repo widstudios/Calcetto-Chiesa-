@@ -6,10 +6,12 @@ use App\Models\Document;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -52,10 +54,7 @@ class DocumentController extends Controller
             'description' => $data['description'] ?? null,
             'for_everyone' => $data['for_everyone'],
             'user_id' => $request->user()->id,
-            'path' => $file->store(Document::FOLDER, Document::DISK),
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize(),
+            ...$this->storeFile($file),
         ]);
         $document->viewers()->sync($data['for_everyone'] ? [] : $data['viewers']);
 
@@ -85,19 +84,17 @@ class DocumentController extends Controller
             'for_everyone' => $data['for_everyone'],
         ]);
 
-        // Un nuovo file prende il posto del vecchio.
+        // Un nuovo file prende il posto del vecchio, che si cancella solo dopo il salvataggio.
+        $old = null;
         if ($file = $request->file('file')) {
             $old = $document->path;
-            $document->fill([
-                'path' => $file->store(Document::FOLDER, Document::DISK),
-                'original_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getClientMimeType(),
-                'size' => $file->getSize(),
-            ]);
-            Storage::disk(Document::DISK)->delete($old);
+            $document->fill($this->storeFile($file));
         }
 
         $document->save();
+        if ($old !== null) {
+            Storage::disk(Document::DISK)->delete($old);
+        }
         $document->viewers()->sync($data['for_everyone'] ? [] : $data['viewers']);
 
         return redirect()->route('documents.index')->with('status', 'Documento aggiornato.');
@@ -127,6 +124,27 @@ class DocumentController extends Controller
         return $inline
             ? $disk->response($document->path, $document->original_name, ['Content-Type' => $document->mime_type])
             : $disk->download($document->path, $document->original_name);
+    }
+
+    /**
+     * Salva il file sul disco privato; se non riesce (disco pieno o non scrivibile) si ferma con un errore nel modulo.
+     *
+     * @return array{path: string, original_name: string, mime_type: ?string, size: int}
+     */
+    private function storeFile(UploadedFile $file): array
+    {
+        $path = $file->store(Document::FOLDER, Document::DISK);
+
+        if ($path === false) {
+            throw ValidationException::withMessages(['file' => 'Non sono riuscito a salvare il file sul server. Riprova più tardi.']);
+        }
+
+        return [
+            'path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime_type' => $file->getClientMimeType(),
+            'size' => (int) $file->getSize(),
+        ];
     }
 
     /**
