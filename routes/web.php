@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\GameSheetController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TournamentController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
@@ -75,6 +76,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('esercizi', DrillController::class)->except(['index', 'show'])->names('drills')->parameters(['esercizi' => 'drill']);
         Route::resource('tournaments', TournamentController::class)->except('show');
         Route::resource('coaches', CoachController::class)->except('show')->parameters(['coaches' => 'coach']);
+        // Tutti gli account e il loro ruolo (es. nominare un altro admin).
+        Route::resource('utenti', UserController::class)->except('show')->names('users')->parameters(['utenti' => 'user']);
         Route::get('games/pdf/{tournament}', [GameController::class, 'pdf'])->name('games.pdf');
         Route::resource('games', GameController::class)->except('show');
         Route::get('games/{game}/tabellino', [GameSheetController::class, 'edit'])->name('games.sheet.edit');
