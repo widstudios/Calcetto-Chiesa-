@@ -8,7 +8,10 @@
             <span class="eyebrow">Account</span>
             <h1>Allenatori</h1>
         </div>
-        <a class="btn" href="{{ route('coaches.create') }}"><x-icon name="plus" /> Nuovo allenatore</a>
+        <div class="actions">
+            <a class="btn secondary" href="{{ route('users.index') }}"><x-icon name="key" /> Utenti e ruoli</a>
+            <a class="btn" href="{{ route('coaches.create') }}"><x-icon name="plus" /> Nuovo allenatore</a>
+        </div>
     </div>
     <p class="muted">Qui segui il tesseramento CSI degli allenatori e crei gli account con cui accedono per gestire la rosa della loro squadra.</p>
 

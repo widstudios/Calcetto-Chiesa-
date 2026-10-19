@@ -56,6 +56,7 @@
                     <span>{{ auth()->user()->role->label() }}</span>
                 </div>
                 @if (auth()->user()->isAdmin())
+                    <a @class(['icon-btn', 'active' => request()->routeIs('users.*')]) href="{{ route('users.index') }}" title="Utenti e ruoli" aria-label="Utenti e ruoli"><x-icon name="users" /></a>
                     <a @class(['icon-btn', 'active' => request()->routeIs('settings.*')]) href="{{ route('settings.edit') }}" title="Impostazioni (nome, logo e colori)" aria-label="Impostazioni"><x-icon name="settings" /></a>
                 @endif
                 <a @class(['icon-btn', 'active' => request()->routeIs('guide')]) href="{{ route('guide') }}" title="Guida all'app" aria-label="Guida all'app"><x-icon name="help" /></a>
