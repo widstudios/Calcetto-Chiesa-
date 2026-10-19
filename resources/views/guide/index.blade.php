@@ -55,6 +55,7 @@
                     <tr><td class="title">Presenze</td><td data-label="A cosa serve">L'appello degli allenamenti e chi si allena di più</td></tr>
                     <tr><td class="title">Distinte</td><td data-label="A cosa serve">La lista dei convocati per la partita, da stampare o scaricare</td></tr>
                     <tr><td class="title">Esercizi</td><td data-label="A cosa serve">Gli esercizi con spiegazione, schema e video</td></tr>
+                    <tr><td class="title">Documenti</td><td data-label="A cosa serve">I file da condividere: scegli se li vedono tutti o solo alcune persone</td></tr>
                 </tbody>
             </table>
         </div>

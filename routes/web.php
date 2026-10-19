@@ -10,6 +10,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DrillController;
 use App\Http\Controllers\LineupController;
 use App\Http\Controllers\PasswordController;
@@ -67,6 +68,10 @@ Route::middleware('auth')->group(function () {
     // Calendario settimanale: allenamenti, partite ed eventi (riunioni, incontri...) delle proprie squadre.
     Route::get('calendario', [CalendarController::class, 'index'])->name('calendar.index');
     Route::resource('calendario/eventi', CalendarController::class)->except(['index', 'show'])->names('calendar.events')->parameters(['eventi' => 'event']);
+
+    // Documenti allegati: chi carica sceglie se li vedono tutti o solo alcune persone.
+    Route::get('documenti/{document}/file', [DocumentController::class, 'download'])->name('documents.download');
+    Route::resource('documenti', DocumentController::class)->except('show')->names('documents')->parameters(['documenti' => 'document']);
 
     // Libreria allenamenti: tutti la consultano, solo l'admin la modifica.
     Route::get('esercizi', [DrillController::class, 'index'])->name('drills.index');
