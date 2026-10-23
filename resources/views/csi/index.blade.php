@@ -75,6 +75,9 @@
                                 @if ($document->imported_at && $document->games_found)
                                     <span><x-icon name="ball" /> {{ $document->games_found }} {{ $document->games_found === 1 ? 'partita letta' : 'partite lette' }}, {{ $document->games_saved }} {{ $document->games_saved === 1 ? 'aggiornata' : 'aggiornate' }}</span>
                                 @endif
+                                @if ($document->document_id)
+                                    <span><x-icon name="file" /> In Documenti per tutti</span>
+                                @endif
                             </div>
                             @if ($document->import_note)
                                 <div class="muted small">{{ $document->import_note }}</div>

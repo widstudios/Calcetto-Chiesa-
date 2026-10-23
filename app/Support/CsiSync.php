@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\CsiDocument;
+use App\Models\Document;
 use App\Models\Setting;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -94,6 +95,9 @@ class CsiSync
             // Dal più vecchio al più nuovo, così vale l'ultimo risultato pubblicato.
             foreach (collect($downloaded)->sortBy('drive_modified_at') as $document) {
                 $summary['games'] += $this->import($document);
+                if (! $document->isCommunique()) {
+                    $this->publish($document);
+                }
             }
 
             Setting::put('csi_synced_at', now()->toIso8601String());
@@ -124,7 +128,7 @@ class CsiSync
         } catch (Throwable $e) {
             // Un PDF che non si legge non deve fermare gli altri.
             report($e);
-            $result = ['found' => 0, 'saved' => 0, 'notes' => ['Non sono riuscito a leggere questo PDF.']];
+            $result = ['found' => 0, 'saved' => 0, 'notes' => $document->isCommunique() ? ['Non sono riuscito a leggere questo PDF.'] : []];
         }
 
         $document->update([
@@ -135,6 +139,34 @@ class CsiSync
         ]);
 
         return $result['saved'];
+    }
+
+    /**
+     * Moduli, adesioni, regolamenti: una copia va in Documenti, visibile a tutti gli allenatori.
+     * Se l'admin l'ha tolta da Documenti, torna solo quando il CSI cambia il file.
+     */
+    private function publish(CsiDocument $file): void
+    {
+        $disk = Storage::disk(self::DISK);
+        $path = Document::FOLDER.'/'.basename($file->path);
+        if (! $disk->copy($file->path, $path)) {
+            return;
+        }
+
+        $document = $file->document ?? new Document(['for_everyone' => true]);
+        if ($document->path && $document->path !== $path) {
+            $disk->delete($document->path);
+        }
+        $document->fill([
+            'title' => pathinfo($file->name, PATHINFO_FILENAME),
+            'description' => $document->description ?? 'Dalla cartella del CSI Roma.',
+            'path' => $path,
+            'original_name' => $file->name,
+            'mime_type' => $file->mime_type,
+            'size' => $disk->size($path),
+        ])->save();
+
+        $file->update(['document_id' => $document->id]);
     }
 
     /** @return list<array<string, mixed>> */

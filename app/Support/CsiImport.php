@@ -26,6 +26,11 @@ class CsiImport
      */
     public function apply(array $games): array
     {
+        // Moduli e regolamenti: nessuna partita, niente da dire.
+        if ($games === []) {
+            return ['found' => 0, 'saved' => 0, 'notes' => []];
+        }
+
         $club = Setting::get('csi_club_name');
         if (blank($club)) {
             return ['found' => count($games), 'saved' => 0, 'notes' => ['Scrivi il nome della società come appare nei comunicati, così riconosco le nostre partite.']];

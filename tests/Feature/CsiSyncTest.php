@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\CsiDocument;
+use App\Models\Document;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -62,6 +63,33 @@ class CsiSyncTest extends TestCase
         $files[0]['modifiedTime'] = '2026-10-23T09:00:00Z';
         $this->artisan('csi:sync')->expectsOutputToContain('Aggiornati: 1')->assertSuccessful();
         $this->assertSame(1, CsiDocument::count());
+    }
+
+    public function test_forms_and_rules_go_to_documents_for_every_coach(): void
+    {
+        $files = [
+            ['id' => 'ad1', 'name' => 'Modulo adesione Oratorio Cup 2026-27.pdf', 'mimeType' => 'application/pdf', 'size' => '1024', 'modifiedTime' => '2026-10-20T10:00:00Z'],
+            ['id' => 'cu1', 'name' => 'Comunicato n. 1.pdf', 'mimeType' => 'application/pdf', 'size' => '2048', 'modifiedTime' => '2026-10-22T18:00:00Z'],
+        ];
+        $this->fakeDrive($files);
+
+        $this->artisan('csi:sync')->assertSuccessful();
+
+        $document = Document::sole();
+        $this->assertSame('Modulo adesione Oratorio Cup 2026-27', $document->title);
+        $this->assertTrue($document->for_everyone);
+        $this->assertNull(CsiDocument::firstWhere('drive_id', 'ad1')->import_note);
+        Storage::disk('local')->assertExists($document->path);
+
+        $coach = User::factory()->create();
+        $this->actingAs($coach)->get('/documenti')->assertOk()->assertSee('Modulo adesione Oratorio Cup 2026-27')->assertSee('CSI Roma')->assertDontSee('Comunicato n. 1');
+        $this->actingAs($coach)->get(route('documents.download', $document))->assertOk();
+
+        // Il CSI aggiorna il modulo: si aggiorna lo stesso documento, senza doppioni.
+        $files[0]['modifiedTime'] = '2026-10-24T10:00:00Z';
+        $this->artisan('csi:sync')->assertSuccessful();
+        $this->assertSame(1, Document::count());
+        $this->assertStringContainsString('ad1', Storage::disk('local')->get(Document::sole()->path));
     }
 
     public function test_admin_syncs_from_panel_and_opens_pdf(): void

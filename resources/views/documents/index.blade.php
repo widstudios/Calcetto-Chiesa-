@@ -25,7 +25,7 @@
                                 <p class="hint" style="margin: 2px 0 4px">{{ $document->description }}</p>
                             @endif
                             <div class="list-meta">
-                                <span><x-icon name="coach" /> {{ $document->author?->name ?? 'Utente eliminato' }}</span>
+                                <span><x-icon name="coach" /> {{ $document->author?->name ?? ($document->csiDocument ? 'CSI Roma' : 'Utente eliminato') }}</span>
                                 <span><x-icon name="clock" /> {{ $document->created_at->format('d/m/Y') }}</span>
                                 <span>{{ $document->humanSize() }}</span>
                                 @if ($document->for_everyone)

@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Documento (di solito un PDF del Comunicato Ufficiale) preso dalla cartella Drive del CSI Roma.
  */
 class CsiDocument extends Model
 {
-    protected $fillable = ['drive_id', 'name', 'mime_type', 'size', 'drive_modified_at', 'path', 'downloaded_at', 'imported_at', 'games_found', 'games_saved', 'import_note'];
+    protected $fillable = ['drive_id', 'name', 'mime_type', 'size', 'drive_modified_at', 'path', 'document_id', 'downloaded_at', 'imported_at', 'games_found', 'games_saved', 'import_note'];
 
     protected function casts(): array
     {
@@ -21,6 +22,22 @@ class CsiDocument extends Model
             'games_found' => 'integer',
             'games_saved' => 'integer',
         ];
+    }
+
+    /**
+     * La copia in Documenti, per i file che non sono comunicati (moduli, adesioni, regolamenti).
+     *
+     * @return BelongsTo<Document, $this>
+     */
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(Document::class);
+    }
+
+    /** Comunicato Ufficiale: lo dice il nome, oppure dentro ci sono partite. */
+    public function isCommunique(): bool
+    {
+        return $this->games_found > 0 || (bool) preg_match('/comunicat|\bc\.?\s?u\.?\s*(n\.?\s*)?\d/iu', $this->name);
     }
 
     public function isPdf(): bool
