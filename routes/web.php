@@ -7,9 +7,12 @@ use App\Http\Controllers\Admin\GameSheetController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TournamentController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DrillController;
 use App\Http\Controllers\LineupController;
 use App\Http\Controllers\PasswordController;
@@ -33,6 +36,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('/password', [PasswordController::class, 'update'])->middleware('throttle:5,1')->name('password.update');
+
+    // Guida all'uso dell'app per i mister.
+    Route::view('guida', 'guide.index')->name('guide');
 
     // Squadre: l'admin le gestisce tutte, l'allenatore vede e modifica la rosa delle sue.
     Route::resource('teams', TeamController::class);
@@ -61,6 +67,14 @@ Route::middleware('auth')->group(function () {
         Route::get('{lineup}/pdf', 'pdf')->name('pdf');
     });
 
+    // Calendario settimanale: allenamenti, partite ed eventi (riunioni, incontri...) delle proprie squadre.
+    Route::get('calendario', [CalendarController::class, 'index'])->name('calendar.index');
+    Route::resource('calendario/eventi', CalendarController::class)->except(['index', 'show'])->names('calendar.events')->parameters(['eventi' => 'event']);
+
+    // Documenti allegati: chi carica sceglie se li vedono tutti o solo alcune persone.
+    Route::get('documenti/{document}/file', [DocumentController::class, 'download'])->name('documents.download');
+    Route::resource('documenti', DocumentController::class)->except('show')->names('documents')->parameters(['documenti' => 'document']);
+
     // Libreria allenamenti: tutti la consultano, solo l'admin la modifica.
     Route::get('esercizi', [DrillController::class, 'index'])->name('drills.index');
 
@@ -68,6 +82,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('esercizi', DrillController::class)->except(['index', 'show'])->names('drills')->parameters(['esercizi' => 'drill']);
         Route::resource('tournaments', TournamentController::class)->except('show');
         Route::resource('coaches', CoachController::class)->except('show')->parameters(['coaches' => 'coach']);
+        // Tutti gli account e il loro ruolo (es. nominare un altro admin).
+        Route::resource('utenti', UserController::class)->except('show')->names('users')->parameters(['utenti' => 'user']);
         Route::get('games/pdf/{tournament}', [GameController::class, 'pdf'])->name('games.pdf');
         Route::resource('games', GameController::class)->except('show');
         Route::get('games/{game}/tabellino', [GameSheetController::class, 'edit'])->name('games.sheet.edit');
