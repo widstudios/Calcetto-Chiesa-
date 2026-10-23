@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CoachController;
+use App\Http\Controllers\Admin\CsiController;
 use App\Http\Controllers\Admin\GameController;
 use App\Http\Controllers\Admin\GameSheetController;
 use App\Http\Controllers\Admin\ImportController;
@@ -90,6 +91,11 @@ Route::middleware('auth')->group(function () {
 
         // Import da Excel: anteprima, poi conferma.
         Route::get('importa', [ImportController::class, 'index'])->name('imports.index');
+        Route::get('comunicati-csi', [CsiController::class, 'index'])->name('csi.index');
+        Route::post('comunicati-csi/sincronizza', [CsiController::class, 'sync'])->middleware('throttle:6,1')->name('csi.sync');
+        Route::put('comunicati-csi/societa', [CsiController::class, 'club'])->name('csi.club');
+        Route::post('comunicati-csi/rileggi', [CsiController::class, 'import'])->middleware('throttle:6,1')->name('csi.import');
+        Route::get('comunicati-csi/{document}', [CsiController::class, 'show'])->name('csi.show');
         Route::get('importa/{type}/modello', [ImportController::class, 'template'])->name('imports.template');
         Route::post('importa/{type}', [ImportController::class, 'preview'])->name('imports.preview');
         Route::post('importa/{type}/conferma', [ImportController::class, 'store'])->name('imports.store');

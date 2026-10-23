@@ -13,6 +13,14 @@
         Puoi caricare lo stesso file più volte: i dati già presenti vengono aggiornati, non duplicati.
         Conviene seguire quest'ordine: tornei, squadre, allenatori, calciatori, partite, allenamenti.</p>
 
+    <section class="card">
+        <div class="card-head">
+            <h2 style="margin: 0">Comunicati CSI</h2>
+            <a class="btn small secondary" href="{{ route('csi.index') }}"><x-icon name="download" /> Apri</a>
+        </div>
+        <p style="margin-bottom: 0">I comunicati ufficiali dell'Oratorio Cup si scaricano da soli dalla cartella Google Drive del CSI Roma.</p>
+    </section>
+
     @error('file')
         <div class="card"><div class="error" style="margin: 0"><x-icon name="alert" /> {{ $message }}</div></div>
     @enderror

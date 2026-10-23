@@ -25,7 +25,7 @@ class DocumentController extends Controller
     {
         return view('documents.index', [
             'documents' => Document::visibleTo($request->user())
-                ->with(['author', 'viewers'])
+                ->with(['author', 'viewers', 'csiDocument'])
                 ->latest()
                 ->get(),
         ]);

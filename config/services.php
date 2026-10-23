@@ -28,6 +28,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Cartella Google Drive pubblica dell'Oratorio Cup (CSI Roma) da cui si scaricano i comunicati.
+    'csi' => [
+        'drive_folder' => env('CSI_DRIVE_FOLDER', '1LYWeT2pmfdPLmjzJuTeAMEtjaF5qkaJz'),
+        'google_key' => env('GOOGLE_API_KEY'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
