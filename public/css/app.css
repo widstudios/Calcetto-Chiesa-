@@ -389,6 +389,9 @@ input[aria-invalid=true], select[aria-invalid=true] { border-color: var(--danger
 .auth-brand .brand-logo img { height: 50px; }
 .auth-brand strong { display: block; font-family: var(--font-display); font-size: 1.5rem; text-transform: uppercase; letter-spacing: .03em; line-height: 1.1; }
 .auth-card .btn { width: 100%; margin-top: 20px; min-height: 50px; font-size: 1.0625rem; }
+.auth-back { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; margin-top: 12px; color: var(--muted); font-weight: 600; text-decoration: none; }
+.auth-back:hover { color: var(--primary); }
+.auth-back .icon { width: 18px; height: 18px; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
