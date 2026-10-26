@@ -22,6 +22,7 @@
                 ['teams.index', ['teams.index', 'teams.create', 'teams.show', 'teams.edit', 'teams.players.*'], 'Squadre', 'users'],
                 ['coaches.index', 'coaches.*', 'Allenatori', 'coach'],
                 ['calendar.index', ['calendar.*', 'games.index', 'games.create', 'games.edit', 'games.sheet.*'], 'Calendario', 'calendar'],
+                ['referees.index', 'referees.*', 'Arbitri', 'whistle'],
                 ['attendances.index', ['attendances.*', 'teams.attendances.*'], 'Presenze', 'checklist'],
                 ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
                 ['drills.index', 'drills.*', 'Esercizi', 'cone'],
@@ -52,6 +53,8 @@
                     </a>
                 @endforeach
             </nav>
+            {{-- Menu che scorre: la voce della pagina aperta resta visibile --}}
+            <script>document.fonts.ready.then(() => document.querySelector('.topnav a.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' }));</script>
             <div class="user-box">
                 <div class="user-chip">
                     <strong>{{ auth()->user()->name }}</strong>
