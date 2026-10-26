@@ -104,6 +104,14 @@ class RefereeTest extends TestCase
             ->assertDontSee('value="'.$game->id.'" checked', false);
     }
 
+    public function test_form_explains_when_there_are_no_games_yet(): void
+    {
+        $this->actingAs($this->admin)->get(route('referees.create'))->assertSee('Non ci sono ancora partite da giocare');
+
+        Game::factory()->create(['referee_id' => Referee::factory()->create()->id]);
+        $this->get(route('referees.create'))->assertSee('tutte quelle da giocare hanno già un arbitro');
+    }
+
     public function test_form_offers_only_free_games_and_own_games(): void
     {
         $referee = Referee::factory()->create();

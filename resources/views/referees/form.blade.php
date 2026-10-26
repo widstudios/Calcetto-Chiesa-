@@ -40,7 +40,11 @@
                 </span>
             </label>
         @empty
-            <p class="muted">Nessuna partita da assegnare: tutte quelle da giocare hanno già un arbitro.</p>
+            @if ($hasUpcoming)
+                <p class="muted">Nessuna partita da assegnare: tutte quelle da giocare hanno già un arbitro.</p>
+            @else
+                <p class="muted">Non ci sono ancora partite da giocare. Salva l'arbitro, poi crea le partite in <a href="{{ route('games.index') }}">Calendario partite</a> e scegli l'arbitro dentro ogni partita.</p>
+            @endif
         @endforelse
         @include('partials.error', ['field' => 'games'])
         <p class="hint">Qui trovi le partite ancora senza arbitro. Puoi scegliere l'arbitro anche da Modifica partita.</p>

@@ -28,7 +28,7 @@ class RefereeController extends Controller
 
     public function create(): View
     {
-        return view('referees.form', ['referee' => new Referee, 'games' => $this->assignableGames()]);
+        return view('referees.form', ['referee' => new Referee, 'games' => $this->assignableGames(), 'hasUpcoming' => $this->hasUpcomingGames()]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -41,7 +41,7 @@ class RefereeController extends Controller
 
     public function edit(Referee $referee): View
     {
-        return view('referees.form', ['referee' => $referee, 'games' => $this->assignableGames($referee)]);
+        return view('referees.form', ['referee' => $referee, 'games' => $this->assignableGames($referee), 'hasUpcoming' => $this->hasUpcomingGames()]);
     }
 
     public function update(Request $request, Referee $referee): RedirectResponse
@@ -76,6 +76,14 @@ class RefereeController extends Controller
                 ->when($referee?->exists, fn ($query) => $query->orWhere('referee_id', $referee->id)))
             ->orderByRaw('kickoff_at is null')->orderBy('kickoff_at')->orderBy('matchday')
             ->get();
+    }
+
+    /**
+     * Ci sono partite ancora da giocare? Se no, prima vanno create in Calendario.
+     */
+    private function hasUpcomingGames(): bool
+    {
+        return Game::where('status', '!=', GameStatus::Giocata)->exists();
     }
 
     /**
