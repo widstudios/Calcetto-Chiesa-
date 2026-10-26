@@ -185,5 +185,5 @@
         </section>
     @endif
 
-    @include('public.regole')
+    @include($tournament?->hasOwnRules() ? 'public.regole-torneo' : 'public.regole')
 @endsection

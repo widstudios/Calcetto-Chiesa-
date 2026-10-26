@@ -5,7 +5,7 @@
 @section('content')
     @include('partials.form-head', ['back' => route('tournaments.index'), 'title' => $tournament->exists ? 'Modifica torneo' : 'Nuovo torneo'])
 
-    <form class="card form-card" method="POST" action="{{ $tournament->exists ? route('tournaments.update', $tournament) : route('tournaments.store') }}">
+    <form class="card form-card" method="POST" action="{{ $tournament->exists ? route('tournaments.update', $tournament) : route('tournaments.store') }}" enctype="multipart/form-data">
         @csrf
         @if ($tournament->exists) @method('PUT') @endif
 
@@ -90,6 +90,35 @@
         <p class="hint">Lascia vuoto per usare il valore delle Impostazioni ({{ App\Models\Setting::lineupMaxPlayers() }}, dal regolamento). Mettilo solo se questa categoria ha un limite diverso.</p>
         @include('partials.error', ['field' => 'lineup_max_players'])
 
+        <fieldset class="swatch-group" style="margin-top: 16px">
+            <legend class="legend">Regolamento *</legend>
+            @php($rules = old('rules_type', $tournament->rules_type?->value ?? 'csi'))
+            <div class="choices">
+                @foreach (App\Enums\TournamentRules::cases() as $case)
+                    <label class="choice"><input type="radio" name="rules_type" value="{{ $case->value }}" @checked($rules === $case->value) data-rules> <span><strong>{{ $case->label() }}</strong><br><span class="muted small">{{ $case->description() }}</span></span></label>
+                @endforeach
+            </div>
+            @include('partials.error', ['field' => 'rules_type'])
+        </fieldset>
+
+        <div id="own-rules-field" @if ($rules !== 'proprio') hidden @endif>
+            <label for="rules_text">Regole del torneo</label>
+            <textarea id="rules_text" name="rules_text" rows="10" placeholder="Durata: 2 tempi da 20 minuti.&#10;&#10;- In distinta al massimo 12 giocatori&#10;- Cambi volanti" @error('rules_text') aria-invalid="true" @enderror>{{ old('rules_text', $tournament->rules_text) }}</textarea>
+            <p class="hint">Lascia una riga vuota tra un paragrafo e l'altro. Le righe che iniziano con un trattino (-) diventano un elenco puntato.</p>
+            @include('partials.error', ['field' => 'rules_text'])
+
+            <label for="rules_pdf">PDF del regolamento</label>
+            @if ($tournament->rulesPdfUrl())
+                <p class="small"><a href="{{ $tournament->rulesPdfUrl() }}" target="_blank" rel="noopener"><x-icon name="book" /> Apri il PDF caricato</a></p>
+            @endif
+            <input id="rules_pdf" type="file" name="rules_pdf" accept="application/pdf,.pdf" @error('rules_pdf') aria-invalid="true" @enderror>
+            <p class="hint">Facoltativo, al massimo 10 MB. Sul sito compare il bottone per scaricarlo.@if ($tournament->rules_pdf) Se ne carichi un altro, prende il posto di quello vecchio.@endif</p>
+            @include('partials.error', ['field' => 'rules_pdf'])
+            @if ($tournament->rules_pdf)
+                <label class="inline-check"><input type="checkbox" name="remove_rules_pdf" value="1"> Togli il PDF</label>
+            @endif
+        </div>
+
         <label for="description">Descrizione</label>
         <textarea id="description" name="description" rows="3">{{ old('description', $tournament->description) }}</textarea>
 
@@ -104,6 +133,12 @@
         document.querySelectorAll('[data-format]').forEach(function (radio) {
             radio.addEventListener('change', function () {
                 document.getElementById('groups-count-field').hidden = radio.value !== 'gironi';
+            });
+        });
+        // Testo e PDF servono solo con un regolamento proprio.
+        document.querySelectorAll('[data-rules]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                document.getElementById('own-rules-field').hidden = radio.value !== 'proprio';
             });
         });
     </script>

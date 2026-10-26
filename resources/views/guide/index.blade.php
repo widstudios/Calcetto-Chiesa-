@@ -137,7 +137,7 @@
         <h2><x-icon name="cone" /> 6. Esercizi, risultati e regolamento</h2>
         <p><strong>Esercizi.</strong> Nella voce <a href="{{ route('drills.index') }}">Esercizi</a> scegli il tipo di allenamento e poi l'esercizio: trovi come si fa, lo schema del campo e un video di esempio. Quando fai l'appello puoi segnare quali esercizi avete fatto, e nell'elenco <strong>Appelli fatti</strong> li ritrovi accanto a ogni data.</p>
         <p><strong>Risultati, classifica e marcatori.</strong> Li inserisce l'organizzazione dopo ogni partita. Tu e le famiglie li vedete sul <a href="{{ route('home') }}">sito pubblico</a>, senza bisogno di accedere.</p>
-        <p><strong>Regolamento.</strong> Sul sito pubblico, nella voce <a href="{{ route('home') }}#regole">Regole</a>, c'è il regolamento del torneo da consultare anche a bordo campo.</p>
+        <p><strong>Regolamento.</strong> Sul sito pubblico, nella voce <a href="{{ route('home') }}#regole">Regole</a>, c'è il regolamento del torneo da consultare anche a bordo campo: quello CSI dell'Oratorio Cup oppure quello proprio del torneo, se l'admin l'ha scelto in Modifica torneo.</p>
     </section>
 
     <section class="card guide" id="domande">
