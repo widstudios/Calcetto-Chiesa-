@@ -40,6 +40,9 @@
                         <div class="list-main">
                             <div class="list-title">
                                 {{ $coach->name }}
+                                @if ($coach->isAdmin())
+                                    <span class="badge gold">Anche admin</span>
+                                @endif
                                 @if ($coach->isCsiRegistered())
                                     <span class="badge">Tesserato CSI dal {{ $coach->csi_registered_on->format('d/m/Y') }}</span>
                                 @else
@@ -53,7 +56,9 @@
                         </div>
                         <div class="actions">
                             <a class="btn small secondary" href="{{ route('coaches.edit', $coach) }}"><x-icon name="pencil" /> <span class="btn-text">Modifica</span></a>
-                            @include('partials.delete', ['action' => route('coaches.destroy', $coach), 'confirm' => 'Eliminare l\'account di '.$coach->name.'?'])
+                            @include('partials.delete', ['action' => route('coaches.destroy', $coach), 'confirm' => $coach->isAdmin()
+                                ? 'Togliere '.$coach->name.' dagli allenatori? Resta amministratore.'
+                                : 'Eliminare l\'account di '.$coach->name.'?'])
                         </div>
                     </li>
                 @endforeach

@@ -58,7 +58,7 @@
             <div class="user-box">
                 <div class="user-chip">
                     <strong>{{ auth()->user()->name }}</strong>
-                    <span>{{ auth()->user()->role->label() }}</span>
+                    <span>{{ auth()->user()->roleLabel() }}</span>
                 </div>
                 @if (auth()->user()->isAdmin())
                     <a @class(['icon-btn', 'active' => request()->routeIs('users.*')]) href="{{ route('users.index') }}" title="Utenti e ruoli" aria-label="Utenti e ruoli"><x-icon name="users" /></a>

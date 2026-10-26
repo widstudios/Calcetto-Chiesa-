@@ -142,7 +142,7 @@ class TeamController extends Controller
     {
         return [
             'tournaments' => Tournament::orderBy('name')->get(),
-            'coaches' => User::where('role', Role::Allenatore)->orderBy('name')->get(),
+            'coaches' => User::coaches()->orderBy('name')->get(),
         ];
     }
 
@@ -162,7 +162,7 @@ class TeamController extends Controller
             ],
             'coach_name' => ['nullable', 'string', 'max:255'],
             'coaches' => ['array'],
-            'coaches.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Allenatore->value)],
+            'coaches.*' => ['integer', Rule::exists('users', 'id')->where(fn ($q) => $q->where('role', Role::Allenatore->value)->orWhere('is_coach', true))],
             'shirt_color' => ['nullable', Rule::in(array_keys(Team::SHIRT_COLORS))],
             'shirt_color_secondary' => ['nullable', Rule::in(array_keys(Team::SHIRT_COLORS))],
             // Niente SVG: può contenere codice che il browser eseguirebbe.

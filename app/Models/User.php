@@ -7,12 +7,13 @@ use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'csi_registered_on'])]
+#[Fillable(['name', 'email', 'password', 'role', 'is_coach', 'csi_registered_on'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,6 +31,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => Role::class,
+            'is_coach' => 'boolean',
             'csi_registered_on' => 'date',
         ];
     }
@@ -57,8 +59,35 @@ class User extends Authenticatable
         return $this->role === Role::Admin;
     }
 
+    /**
+     * Allena almeno una squadra: tutti gli allenatori e gli admin segnati anche come allenatori.
+     */
+    public function isCoach(): bool
+    {
+        return $this->role === Role::Allenatore || $this->is_coach;
+    }
+
     public function hasRole(Role ...$roles): bool
     {
-        return in_array($this->role, $roles, true);
+        return in_array($this->role, $roles, true)
+            || ($this->isCoach() && in_array(Role::Allenatore, $roles, true));
+    }
+
+    /**
+     * Ruolo da mostrare, per esempio «Amministratore torneo e allenatore».
+     */
+    public function roleLabel(): string
+    {
+        return $this->isAdmin() && $this->is_coach ? $this->role->label().' e allenatore' : $this->role->label();
+    }
+
+    /**
+     * Solo chi può allenare: allenatori e admin che sono anche allenatori.
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeCoaches(Builder $query): void
+    {
+        $query->where(fn (Builder $q) => $q->where('role', Role::Allenatore)->orWhere('is_coach', true));
     }
 }
