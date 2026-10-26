@@ -100,6 +100,22 @@ class TournamentRulesTest extends TestCase
         ])->assertSessionHasErrors('rules_pdf');
     }
 
+    public function test_failed_pdf_upload_does_not_leave_empty_own_rules(): void
+    {
+        $disk = \Mockery::mock(Storage::disk('uploads'))->makePartial();
+        $disk->shouldReceive('putFileAs')->andReturn(false);
+        Storage::set('uploads', $disk);
+
+        $this->post(route('tournaments.store'), [
+            'name' => 'Coppa Prova', 'rules_type' => 'proprio',
+            'rules_pdf' => UploadedFile::fake()->create('regole.pdf', 200, 'application/pdf'),
+        ])->assertSessionHasErrors('rules_pdf');
+
+        $tournament = Tournament::firstWhere('name', 'Coppa Prova');
+        $this->assertSame(TournamentRules::Csi, $tournament->rules_type);
+        $this->assertNull($tournament->rules_pdf);
+    }
+
     public function test_deleting_the_tournament_deletes_its_rules_pdf(): void
     {
         Storage::disk('uploads')->put('regolamento-1.pdf', 'x');

@@ -85,6 +85,11 @@ class TournamentController extends Controller
             // Nome sempre nuovo, così nessuno scarica dalla cache il regolamento vecchio.
             $name = 'regolamento-'.$tournament->id.'-'.Str::lower(Str::random(8)).'.pdf';
             if (! $disk->putFileAs('', $request->file('rules_pdf'), $name)) {
+                // Senza PDF e senza testo il regolamento proprio sarebbe vuoto: si torna a quello CSI.
+                if ($tournament->hasOwnRules() && blank($tournament->rules_text) && ! $tournament->rules_pdf) {
+                    $tournament->update(['rules_type' => TournamentRules::Csi]);
+                }
+
                 return 'Non sono riuscito a salvare il PDF sul server. Controlla i permessi della cartella public/uploads.';
             }
             $tournament->update(['rules_pdf' => $name]);
