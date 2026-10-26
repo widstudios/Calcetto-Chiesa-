@@ -85,6 +85,8 @@ Route::middleware('auth')->group(function () {
         // Tutti gli account e il loro ruolo (es. nominare un altro admin).
         Route::resource('utenti', UserController::class)->except('show')->names('users')->parameters(['utenti' => 'user']);
         Route::get('games/pdf/{tournament}', [GameController::class, 'pdf'])->name('games.pdf');
+        Route::post('games/generate/{tournament}', [GameController::class, 'generate'])->name('games.generate');
+        Route::post('games/knockout/{tournament}', [GameController::class, 'knockout'])->name('games.knockout');
         Route::resource('games', GameController::class)->except('show');
         Route::get('games/{game}/tabellino', [GameSheetController::class, 'edit'])->name('games.sheet.edit');
         Route::put('games/{game}/tabellino', [GameSheetController::class, 'update'])->name('games.sheet.update');

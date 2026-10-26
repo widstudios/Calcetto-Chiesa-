@@ -7,7 +7,7 @@
         <div class="team-head">
             <x-team-badge :team="$team" size="lg" />
             <div>
-                <span class="eyebrow">{{ $team->tournament->name }}</span>
+                <span class="eyebrow">{{ $team->tournament->name }}@if ($team->groupLabel()) · {{ $team->groupLabel() }}@endif</span>
                 <h1>{{ $team->name }}</h1>
                 <p class="muted">
                     Allenatore: {{ $team->coachDisplayName() ?? 'non indicato' }}

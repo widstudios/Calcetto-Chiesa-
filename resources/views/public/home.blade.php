@@ -32,7 +32,7 @@
 
             @if ($next)
                 <a class="next-match" href="#calendario">
-                    <span class="next-label">Prossima partita @if ($next->matchday)<span>· {{ $next->matchday }}ª giornata</span>@endif</span>
+                    <span class="next-label">Prossima partita @if ($next->stage)<span>· {{ $next->stage->label() }}</span>@elseif ($next->matchday)<span>· {{ $next->matchday }}ª giornata</span>@endif</span>
                     <span class="next-teams">
                         <span class="next-team"><x-team-badge :team="$next->homeTeam" /><strong>{{ $next->homeTeam->name }}</strong></span>
                         <span class="next-vs">vs</span>
@@ -59,10 +59,13 @@
     @if ($tournament)
         <nav class="section-nav" aria-label="Sezioni della pagina">
             <div class="section-nav-inner">
-                <a href="#classifica">Classifica</a>
+                <a href="#classifica">{{ $tournament->hasGroups() ? 'Gironi' : 'Classifica' }}</a>
                 <a href="#risultati">Risultati</a>
                 <a href="#marcatori">Marcatori</a>
                 <a href="#pagelle">Pagelle</a>
+                @if ($knockout->isNotEmpty())
+                    <a href="#fase-finale">Fase finale</a>
+                @endif
                 <a href="#calendario">Calendario</a>
                 <a href="#regole">Regole</a>
             </div>
@@ -76,40 +79,23 @@
     @else
         <div class="public-grid">
             <section class="card flush" id="classifica">
-                <div class="card-head"><h2><x-icon name="trophy" /> Classifica</h2><a class="btn small secondary" href="{{ route('standings.pdf', $tournament) }}"><x-icon name="download" /> PDF</a></div>
+                <div class="card-head"><h2><x-icon name="trophy" /> {{ $groupStandings ? 'Classifiche dei gironi' : 'Classifica' }}</h2><a class="btn small secondary" href="{{ route('standings.pdf', $tournament) }}"><x-icon name="download" /> PDF</a></div>
                 @if ($standings->isEmpty())
                     <div class="empty"><p>Nessuna squadra iscritta.</p></div>
                 @else
-                    <div class="table-wrap">
-                        <table class="standings">
-                            <thead>
-                                <tr>
-                                    <th class="pos">#</th><th>Squadra</th><th class="num" title="Punti">Pt</th>
-                                    <th class="num" title="Giocate">G</th><th class="num" title="Vinte">V</th><th class="num" title="Pareggiate">N</th><th class="num" title="Perse">P</th>
-                                    <th class="num hide-sm" title="Gol fatti">GF</th><th class="num hide-sm" title="Gol subiti">GS</th><th class="num" title="Differenza reti">DR</th>
-                                    <th class="hide-sm">Forma</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($standings as $row)
-                                    <tr @class(['leader' => $loop->first && $row->played])>
-                                        <td class="pos">{{ $loop->iteration }}</td>
-                                        <td class="team-name"><span class="team-line"><x-team-badge :team="$row->team" size="sm" /> {{ $row->team->name }}</span></td>
-                                        <td class="num points">{{ $row->points }}</td>
-                                        <td class="num">{{ $row->played }}</td>
-                                        <td class="num">{{ $row->won }}</td>
-                                        <td class="num">{{ $row->drawn }}</td>
-                                        <td class="num">{{ $row->lost }}</td>
-                                        <td class="num hide-sm">{{ $row->goals_for }}</td>
-                                        <td class="num hide-sm">{{ $row->goals_against }}</td>
-                                        <td class="num">{{ $row->goal_difference > 0 ? '+' : '' }}{{ $row->goal_difference }}</td>
-                                        <td class="hide-sm"><span class="form">@foreach ($row->form as $r)<span class="form-{{ $r }}" title="{{ ['V' => 'Vinta', 'N' => 'Pareggiata', 'P' => 'Persa'][$r] }}">{{ $r }}</span>@endforeach</span></td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <p class="small muted legend-line">3 punti a vittoria, 1 a pareggio. A parità di punti conta la differenza reti.</p>
+                    @if ($groupStandings)
+                        @foreach ($groupStandings as $group => $rows)
+                            <h3 class="group-title">{{ $group !== '' ? 'Girone '.$group : 'Senza girone' }}</h3>
+                            @if ($rows->isEmpty())
+                                <div class="empty"><p>Nessuna squadra in questo girone.</p></div>
+                            @else
+                                @include('public.standings-table', ['standings' => $rows])
+                            @endif
+                        @endforeach
+                    @else
+                        @include('public.standings-table', ['standings' => $standings])
+                    @endif
+                    <p class="small muted legend-line">3 punti a vittoria, 1 a pareggio. A parità di punti conta la differenza reti.@if ($groupStandings) Nella classifica di ogni girone contano solo le partite tra squadre dello stesso girone.@endif</p>
                 @endif
             </section>
 
@@ -148,6 +134,37 @@
                 @include('public.leaderboard', ['players' => $mvps, 'value' => fn ($p) => $p->mvp_count, 'unit' => fn ($p) => $p->mvp_count == 1 ? 'volta' : 'volte', 'empty' => 'Nessun premio assegnato.'])
             </section>
         </div>
+
+        @if ($knockout->isNotEmpty())
+            <section class="card flush" id="fase-finale">
+                <div class="card-head"><h2><x-icon name="trophy" /> Fase finale</h2></div>
+                <div class="bracket">
+                    @foreach ($knockout as $stage => $stageGames)
+                        <div class="bracket-round">
+                            <h3>{{ \App\Enums\GameStage::from($stage)->label() }}</h3>
+                            @foreach ($stageGames as $game)
+                                @php($winner = $game->winnerId())
+                                <div class="bracket-game">
+                                    @foreach ([[$game->homeTeam, $game->home_score, $game->home_penalties], [$game->awayTeam, $game->away_score, $game->away_penalties]] as [$team, $score, $penalties])
+                                        <div @class(['bracket-team', 'winner' => $winner === $team->id, 'out' => $winner && $winner !== $team->id])>
+                                            <span class="team-line"><x-team-badge :team="$team" size="sm" /> {{ $team->name }}</span>
+                                            <span class="bracket-score">@if ($game->isPlayed()){{ $score }}@if ($game->hasPenalties()) <small>({{ $penalties }})</small>@endif @else – @endif</span>
+                                        </div>
+                                    @endforeach
+                                    @if (! $game->isPlayed() && $game->kickoff_at)
+                                        <div class="bracket-when">{{ $game->kickoff_at->format('d/m · H:i') }}</div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
+                @php($final = $knockout->get('finale')?->first())
+                @if ($final && $final->winnerId())
+                    <p class="legend-line champion"><x-icon name="trophy" /> Vince il torneo <strong>{{ $final->winnerId() === $final->home_team_id ? $final->homeTeam->name : $final->awayTeam->name }}</strong></p>
+                @endif
+            </section>
+        @endif
 
         <section class="card flush" id="calendario">
             <div class="card-head"><h2><x-icon name="calendar" /> Calendario completo</h2></div>

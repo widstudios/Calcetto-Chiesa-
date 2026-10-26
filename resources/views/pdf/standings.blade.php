@@ -4,29 +4,16 @@
 @section('eyebrow', $tournament->name.($tournament->season ? ' '.$tournament->season : ''))
 
 @section('content')
-    <table class="grid">
-        <thead>
-            <tr><th class="num">#</th><th>Squadra</th><th class="num">Pt</th><th class="num">G</th><th class="num">V</th><th class="num">N</th><th class="num">P</th><th class="num">GF</th><th class="num">GS</th><th class="num">DR</th></tr>
-        </thead>
-        <tbody>
-            @forelse ($standings as $row)
-                <tr>
-                    <td class="num">{{ $loop->iteration }}</td>
-                    <td>{{ $row->team->name }}</td>
-                    <td class="num"><strong>{{ $row->points }}</strong></td>
-                    <td class="num">{{ $row->played }}</td>
-                    <td class="num">{{ $row->won }}</td>
-                    <td class="num">{{ $row->drawn }}</td>
-                    <td class="num">{{ $row->lost }}</td>
-                    <td class="num">{{ $row->goals_for }}</td>
-                    <td class="num">{{ $row->goals_against }}</td>
-                    <td class="num">{{ $row->goal_difference > 0 ? '+' : '' }}{{ $row->goal_difference }}</td>
-                </tr>
-            @empty
-                <tr><td colspan="10">Nessuna squadra.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+    @if ($groupStandings ?? null)
+        @foreach ($groupStandings as $group => $rows)
+            <div class="avoid">
+                <h2>{{ $group !== '' ? 'Girone '.$group : 'Senza girone' }}</h2>
+                @include('pdf.standings-table', ['standings' => $rows])
+            </div>
+        @endforeach
+    @else
+        @include('pdf.standings-table', ['standings' => $standings])
+    @endif
 
     @if ($scorers->isNotEmpty())
         <div class="avoid">

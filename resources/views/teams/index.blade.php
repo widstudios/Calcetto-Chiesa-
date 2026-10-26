@@ -45,7 +45,7 @@
                         <div class="list-main">
                             <a class="list-title" href="{{ route('teams.show', $team) }}">{{ $team->name }}</a>
                             <div class="list-meta">
-                                <span><x-icon name="trophy" /> {{ $team->tournament->name }}</span>
+                                <span><x-icon name="trophy" /> {{ $team->tournament->name }}@if ($team->groupLabel()) · {{ $team->groupLabel() }}@endif</span>
                                 <span><x-icon name="coach" /> {{ $team->coachDisplayName() ?? 'Allenatore non indicato' }}</span>
                                 <span><x-icon name="shirt" /> {{ $team->players_count }} calciatori</span>
                             </div>

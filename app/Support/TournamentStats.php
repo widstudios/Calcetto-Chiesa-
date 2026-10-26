@@ -24,14 +24,49 @@ class TournamentStats
      */
     public function standings(): Collection
     {
-        $rows = $this->tournament->teams()->orderBy('name')->get()->mapWithKeys(fn ($team) => [$team->id => (object) [
+        return $this->table($this->tournament->teams()->orderBy('name')->get());
+    }
+
+    /**
+     * Una classifica per girone, in ordine di lettera. Contano solo le partite tra squadre dello stesso girone.
+     * Le squadre non ancora assegnate finiscono sotto la chiave '' («Senza girone»).
+     *
+     * @return Collection<string, Collection<int, object>>
+     */
+    public function groupStandings(): Collection
+    {
+        $teams = $this->tournament->teams()->orderBy('name')->get();
+        $groups = collect($this->tournament->groupNames())->mapWithKeys(fn ($g) => [$g => collect()]);
+
+        foreach ($teams->groupBy(fn ($team) => $team->group_name ?? '') as $group => $members) {
+            $groups[$group] = $members;
+        }
+
+        return $groups
+            ->sortKeys()
+            ->sortBy(fn ($members, $group) => $group === '' ? 1 : 0)
+            ->reject(fn ($members, $group) => $group === '' && $members->isEmpty())
+            ->map(fn ($members, $group) => $this->table($members, $group !== ''));
+    }
+
+    /**
+     * @param  Collection<int, Team>  $teams
+     * @param  bool  $sameGroupOnly  conta solo le partite tra squadre dello stesso girone
+     */
+    private function table(Collection $teams, bool $sameGroupOnly = false): Collection
+    {
+        $rows = $teams->mapWithKeys(fn ($team) => [$team->id => (object) [
             'team' => $team, 'played' => 0, 'won' => 0, 'drawn' => 0, 'lost' => 0,
             'goals_for' => 0, 'goals_against' => 0, 'goal_difference' => 0, 'points' => 0, 'form' => [],
         ]]);
 
-        $played = $this->tournament->games()->where('status', GameStatus::Giocata)->get();
+        // La fase finale non conta in classifica.
+        $played = $this->tournament->games()->where('status', GameStatus::Giocata)->whereNull('stage')->get();
 
         foreach ($played as $game) {
+            if ($sameGroupOnly && ! ($rows->has($game->home_team_id) && $rows->has($game->away_team_id))) {
+                continue;
+            }
             foreach ([[$game->home_team_id, $game->home_score, $game->away_score], [$game->away_team_id, $game->away_score, $game->home_score]] as [$teamId, $for, $against]) {
                 $row = $rows->get($teamId);
                 if (! $row) {

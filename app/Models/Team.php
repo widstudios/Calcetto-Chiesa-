@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['tournament_id', 'name', 'coach_name', 'logo', 'shirt_color', 'shirt_color_secondary'])]
+#[Fillable(['tournament_id', 'name', 'group_name', 'coach_name', 'logo', 'shirt_color', 'shirt_color_secondary'])]
 class Team extends Model
 {
     /** @use HasFactory<TeamFactory> */
@@ -47,6 +47,12 @@ class Team extends Model
     {
         // Eliminata la squadra, il suo stemma non serve più.
         static::deleted(fn (Team $team) => $team->logo && Storage::disk('uploads')->delete($team->logo));
+    }
+
+    /** «Girone A», oppure null se la squadra non è in un girone. */
+    public function groupLabel(): ?string
+    {
+        return $this->group_name ? 'Girone '.$this->group_name : null;
     }
 
     /** Indirizzo dello stemma caricato, oppure null. */
