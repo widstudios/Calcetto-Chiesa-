@@ -63,6 +63,7 @@
                 <a href="#risultati">Risultati</a>
                 <a href="#marcatori">Marcatori</a>
                 <a href="#pagelle">Pagelle</a>
+                <a href="#portieri">Portieri</a>
                 @if ($knockout->isNotEmpty())
                     <a href="#fase-finale">Fase finale</a>
                 @endif
@@ -128,6 +129,10 @@
             <section class="card flush" id="pagelle">
                 <div class="card-head"><h2><x-icon name="check" /> Media voto</h2></div>
                 @include('public.leaderboard', ['players' => $ratings, 'value' => fn ($p) => number_format($p->average_rating, 2, ',', ''), 'note' => fn ($p) => $p->rated_games.' '.($p->rated_games == 1 ? 'voto' : 'voti'), 'empty' => 'Nessun voto ancora.'])
+            </section>
+            <section class="card flush" id="portieri">
+                <div class="card-head"><h2><x-icon name="shirt" /> Miglior portiere</h2></div>
+                @include('public.leaderboard', ['players' => $goalkeepers, 'value' => fn ($p) => number_format($p->average_conceded, 2, ',', ''), 'unit' => 'subiti a partita', 'note' => fn ($p) => $p->keeper_games.' '.($p->keeper_games == 1 ? 'partita' : 'partite').' · '.$p->goals_conceded.' gol subiti'.($p->clean_sheets ? ' · '.$p->clean_sheets.' a porta inviolata' : ''), 'empty' => 'Nessun portiere segnato nei tabellini.'])
             </section>
             <section class="card flush">
                 <div class="card-head"><h2><x-icon name="trophy" /> Migliori in campo</h2></div>
