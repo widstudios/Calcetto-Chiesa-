@@ -83,7 +83,10 @@ class PublicSiteTest extends TestCase
         $this->actingAs($admin)->put(route('games.sheet.update', $game), ['mvp_player_id' => $outsider->id])
             ->assertSessionHasErrors('mvp_player_id');
 
-        $this->actingAs($admin)->get(route('games.sheet.edit', Game::factory()->create()))->assertNotFound();
+        // Partita non ancora giocata: si va prima a inserire il risultato.
+        $scheduled = Game::factory()->create();
+        $this->actingAs($admin)->get(route('games.sheet.edit', $scheduled))
+            ->assertRedirect(route('games.edit', $scheduled))->assertSessionHas('status');
     }
 
     public function test_coach_cannot_edit_sheet(): void
