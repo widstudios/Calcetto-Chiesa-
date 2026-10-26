@@ -64,7 +64,7 @@
             </select>
             @include('partials.error', ['field' => 'referee_id'])
             @if ($referees->isEmpty())
-                <p class="hint">Nessun arbitro ancora: aggiungili da <a href="{{ route('referees.create') }}">Arbitri</a>.</p>
+                <p class="hint">Nessun arbitro ancora: puoi salvare la partita senza arbitro, aggiungerlo in <a href="{{ route('referees.create') }}">Arbitri</a> e poi sceglierlo qui da Modifica.</p>
             @endif
 
             <div class="grid">
