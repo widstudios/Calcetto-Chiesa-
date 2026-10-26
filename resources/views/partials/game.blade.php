@@ -49,6 +49,9 @@
     @endif
     @if ($editable ?? false)
         <div class="game-bottom">
+            <div class="list-meta">
+                <span><x-icon name="whistle" /> {{ $game->referee ? 'Arbitro: '.$game->referee->fullName() : 'Arbitro da assegnare' }}</span>
+            </div>
             <div class="actions">
                 <a class="btn small secondary" href="{{ route('games.edit', $game) }}"><x-icon name="pencil" /> {{ $game->isPlayed() ? 'Modifica' : 'Risultato' }}</a>
                 @if ($game->isPlayed())

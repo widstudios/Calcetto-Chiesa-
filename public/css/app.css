@@ -297,7 +297,7 @@ a.list-title:hover { color: var(--primary); text-decoration: underline; }
 .card:not(.flush) .game { padding-left: 0; padding-right: 0; }
 .game-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 .game-top .list-meta { margin: 0; }
-.game-bottom { display: flex; justify-content: flex-end; margin-top: 10px; }
+.game-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
 @media (max-width: 480px) {
     .match { gap: 8px; }
     .match .team { font-size: 1rem; }
@@ -389,6 +389,9 @@ input[aria-invalid=true], select[aria-invalid=true] { border-color: var(--danger
 .auth-brand .brand-logo img { height: 50px; }
 .auth-brand strong { display: block; font-family: var(--font-display); font-size: 1.5rem; text-transform: uppercase; letter-spacing: .03em; line-height: 1.1; }
 .auth-card .btn { width: 100%; margin-top: 20px; min-height: 50px; font-size: 1.0625rem; }
+.auth-back { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; margin-top: 12px; color: var(--muted); font-weight: 600; text-decoration: none; }
+.auth-back:hover { color: var(--primary); }
+.auth-back .icon { width: 18px; height: 18px; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
@@ -620,15 +623,17 @@ table.sheet input[type=radio] { width: 22px; height: 22px; accent-color: var(--a
 .row-errors li strong { white-space: nowrap; }
 /* Con tante voci di menu il nome del sito non ci sta: resta solo il logo (il nome è nel suggerimento) */
 @media (min-width: 1024px) and (max-width: 1365px) { body:not(.public) .brand-name { display: none; } }
-/* Menu dell'amministratore (otto voci): testata più larga, voci più strette sul computer, barra in basso scorrevole sul telefono */
+/* Menu dell'amministratore (undici voci): testata più larga, voci più strette sul computer, barra in basso scorrevole sul telefono */
 @media (min-width: 1024px) {
     .nav-wide .topbar-inner { max-width: 1560px; padding-left: 24px; padding-right: 24px; }
     .nav-wide .brand-name { font-size: 1.25rem; max-width: 11em; }
-    .nav-wide .topnav { flex: none; gap: 2px; margin-left: 8px; }
+    /* Se le voci non ci stanno il menu scorre di lato invece di allargare la pagina */
+    .nav-wide .topnav { flex: 0 1 auto; min-width: 0; gap: 2px; margin-left: 8px; overflow-x: auto; scrollbar-width: none; }
+    .nav-wide .topnav::-webkit-scrollbar { display: none; }
     .nav-wide .topnav a { padding: 0 10px; gap: 6px; }
     .nav-wide .user-chip { display: none; }
 }
-@media (min-width: 1024px) and (max-width: 1199px) {
+@media (min-width: 1024px) and (max-width: 1599px) {
     .nav-wide .topnav a .icon { display: none; }
 }
 @media (min-width: 1024px) and (max-width: 1399px) { .nav-wide .brand-name { display: none; } }
@@ -851,3 +856,7 @@ table.sheet input[type=radio] { width: 22px; height: 22px; accent-color: var(--a
 .legend-line.champion { display: flex; align-items: center; gap: 8px; font-size: 1rem; }
 .schedule-fields { margin-top: 8px; }
 .schedule-fields summary { cursor: pointer; font-weight: 600; color: var(--primary); min-height: 44px; display: flex; align-items: center; }
+
+/* ---------- Arbitri ---------- */
+.referee-games { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: .9rem; }
+.referee-games a { font-weight: 600; color: var(--text); }

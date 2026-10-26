@@ -72,6 +72,19 @@
             <label for="venue">Campo</label>
             <input id="venue" type="text" name="venue" value="{{ old('venue', $game->venue) }}">
 
+            <label for="referee_id">Arbitro</label>
+            @php($referees = \App\Models\Referee::orderBy('last_name')->orderBy('first_name')->get())
+            <select id="referee_id" name="referee_id">
+                <option value="">Da assegnare</option>
+                @foreach ($referees as $referee)
+                    <option value="{{ $referee->id }}" @selected(old('referee_id', $game->referee_id) == $referee->id)>{{ $referee->last_name }} {{ $referee->first_name }}</option>
+                @endforeach
+            </select>
+            @include('partials.error', ['field' => 'referee_id'])
+            @if ($referees->isEmpty())
+                <p class="hint">Nessun arbitro ancora: puoi salvare la partita senza arbitro, aggiungerlo in <a href="{{ route('referees.create') }}">Arbitri</a> e poi sceglierlo qui da Modifica.</p>
+            @endif
+
             <div class="grid">
                 <div>
                     <label for="status">Stato *</label>

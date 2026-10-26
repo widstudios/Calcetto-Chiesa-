@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CsiController;
 use App\Http\Controllers\Admin\GameController;
 use App\Http\Controllers\Admin\GameSheetController;
 use App\Http\Controllers\Admin\ImportController;
+use App\Http\Controllers\Admin\RefereeController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TournamentController;
 use App\Http\Controllers\Admin\UserController;
@@ -84,6 +85,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('coaches', CoachController::class)->except('show')->parameters(['coaches' => 'coach']);
         // Tutti gli account e il loro ruolo (es. nominare un altro admin).
         Route::resource('utenti', UserController::class)->except('show')->names('users')->parameters(['utenti' => 'user']);
+        // Arbitri: dati di contatto (mai sul sito pubblico) e partite che dirigono.
+        Route::resource('arbitri', RefereeController::class)->except('show')->names('referees')->parameters(['arbitri' => 'referee']);
         Route::get('games/pdf/{tournament}', [GameController::class, 'pdf'])->name('games.pdf');
         Route::post('games/generate/{tournament}', [GameController::class, 'generate'])->name('games.generate');
         Route::post('games/knockout/{tournament}', [GameController::class, 'knockout'])->name('games.knockout');

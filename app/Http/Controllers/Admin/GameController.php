@@ -30,7 +30,7 @@ class GameController extends Controller
             'tournaments' => $tournaments,
             'tournament' => $tournament,
             'games' => $tournament
-                ? $tournament->games()->with(['homeTeam', 'awayTeam'])->orderByRaw('stage is not null')->orderBy('matchday')->orderBy('bracket_slot')->get()
+                ? $tournament->games()->with(['homeTeam', 'awayTeam', 'referee'])->orderByRaw('stage is not null')->orderBy('matchday')->orderBy('bracket_slot')->get()
                 : collect(),
         ]);
     }
@@ -143,6 +143,7 @@ class GameController extends Controller
         $data = $request->validate([
             'home_team_id' => ['required', $teamInTournament],
             'away_team_id' => ['required', 'different:home_team_id', $teamInTournament],
+            'referee_id' => ['nullable', 'integer', 'exists:referees,id'],
             'matchday' => ['nullable', 'integer', 'min:1', 'max:99'],
             'stage' => ['nullable', Rule::enum(GameStage::class)],
             'kickoff_at' => ['nullable', 'date'],

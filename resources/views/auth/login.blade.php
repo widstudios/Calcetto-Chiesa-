@@ -28,6 +28,8 @@
 
                 <button class="btn" type="submit">Entra</button>
             </form>
+
+            <a class="auth-back" href="{{ route('home') }}"><x-icon name="back" /> Torna al sito</a>
         </div>
     </div>
 @endsection

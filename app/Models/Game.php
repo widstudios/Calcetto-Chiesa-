@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Una partita del calendario. Si chiama "Game" perché "match" è una parola riservata in PHP.
  */
-#[Fillable(['tournament_id', 'home_team_id', 'away_team_id', 'matchday', 'stage', 'bracket_slot', 'kickoff_at', 'venue', 'home_score', 'away_score', 'home_penalties', 'away_penalties', 'mvp_player_id', 'status', 'csi_code'])]
+#[Fillable(['tournament_id', 'home_team_id', 'away_team_id', 'referee_id', 'matchday', 'stage', 'bracket_slot', 'kickoff_at', 'venue', 'home_score', 'away_score', 'home_penalties', 'away_penalties', 'mvp_player_id', 'status', 'csi_code'])]
 class Game extends Model
 {
     /** @use HasFactory<GameFactory> */
@@ -57,6 +57,16 @@ class Game extends Model
     public function awayTeam(): BelongsTo
     {
         return $this->belongsTo(Team::class, 'away_team_id');
+    }
+
+    /**
+     * Chi arbitra la partita.
+     *
+     * @return BelongsTo<Referee, $this>
+     */
+    public function referee(): BelongsTo
+    {
+        return $this->belongsTo(Referee::class);
     }
 
     /**
