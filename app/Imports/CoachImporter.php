@@ -53,7 +53,7 @@ class CoachImporter extends Importer
         if ($registered > now()->toDateString()) {
             throw new RowError('la data del tesseramento è nel futuro.');
         }
-        if (User::whereRaw('lower(email) = ?', [$email])->where('role', '!=', Role::Allenatore)->exists()) {
+        if (User::whereRaw('lower(email) = ?', [$email])->whereNot(fn ($q) => $q->coaches())->exists()) {
             throw new RowError("{$email} appartiene a un account che non è un allenatore.");
         }
 
@@ -93,6 +93,6 @@ class CoachImporter extends Importer
      */
     private function find(array $data): ?User
     {
-        return User::whereRaw('lower(email) = ?', [$data['email']])->where('role', Role::Allenatore)->first();
+        return User::whereRaw('lower(email) = ?', [$data['email']])->coaches()->first();
     }
 }

@@ -45,7 +45,7 @@ class ImportCoaches extends Command
                         'csi_registered_on' => $row['tesserato_il'],
                     ]);
                     $added++;
-                } elseif ($coach->role !== Role::Allenatore) {
+                } elseif (! $coach->isCoach()) {
                     // Email di un altro tipo di account (es. amministratore): non diventa un mister.
                     $this->warn("{$row['email']} appartiene a un account che non è un allenatore: riga saltata.");
                 } elseif ($row['tesserato_il'] !== null) {
@@ -57,7 +57,7 @@ class ImportCoaches extends Command
             return [$added, $updated];
         });
 
-        $coaches = User::where('role', Role::Allenatore);
+        $coaches = User::coaches();
         $this->info("{$added} mister aggiunti, {$updated} aggiornati. Tesserati CSI: "
             .(clone $coaches)->whereNotNull('csi_registered_on')->count()
             .', da tesserare: '.$coaches->whereNull('csi_registered_on')->count().'.');

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\Role;
+use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -100,5 +101,48 @@ class UserRoleTest extends TestCase
         $this->actingAs($admin)->delete(route('users.destroy', $other))->assertSessionHasErrors('user');
 
         $this->assertSame(Role::Admin, $other->fresh()->role);
+    }
+
+    public function test_promoted_coach_can_stay_coach_with_teams(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $coach = User::factory()->create(['name' => 'Piero Perilli']);
+        $team = Team::factory()->create();
+        $coach->teams()->attach($team);
+
+        $this->actingAs($admin)->put(route('users.update', $coach), ['name' => $coach->name, 'email' => $coach->email, 'role' => 'admin', 'is_coach' => '1'])
+            ->assertRedirect(route('users.index'));
+
+        $coach->refresh();
+        $this->assertTrue($coach->isAdmin());
+        $this->assertTrue($coach->isCoach());
+        $this->assertSame('Amministratore torneo e allenatore', $coach->roleLabel());
+        $this->assertTrue($coach->teams->contains($team));
+        $this->actingAs($admin)->get(route('coaches.index'))->assertSee('Piero Perilli')->assertSee('Anche admin');
+        $this->actingAs($admin)->get(route('teams.edit', $team))->assertSee('Piero Perilli');
+    }
+
+    public function test_admin_without_coach_flag_loses_teams(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $other = User::factory()->admin()->create(['is_coach' => true]);
+        $other->teams()->attach(Team::factory()->create());
+
+        $this->actingAs($admin)->put(route('users.update', $other), ['name' => $other->name, 'email' => $other->email, 'role' => 'admin', 'is_coach' => '0']);
+
+        $this->assertFalse($other->fresh()->isCoach());
+        $this->assertCount(0, $other->fresh()->teams);
+    }
+
+    public function test_removing_admin_from_coaches_keeps_account(): void
+    {
+        $admin = User::factory()->admin()->create(['is_coach' => true]);
+        $admin->teams()->attach(Team::factory()->create());
+
+        $this->actingAs($admin)->delete(route('coaches.destroy', $admin))->assertRedirect(route('coaches.index'));
+
+        $this->assertTrue($admin->fresh()->isAdmin());
+        $this->assertFalse($admin->fresh()->isCoach());
+        $this->assertCount(0, $admin->fresh()->teams);
     }
 }

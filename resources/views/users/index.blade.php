@@ -10,7 +10,7 @@
         </div>
         <a class="btn" href="{{ route('users.create') }}"><x-icon name="plus" /> Nuovo utente</a>
     </div>
-    <p class="muted">Gli amministratori gestiscono tutto il torneo; gli allenatori solo le loro squadre. Per nominare un altro admin apri Modifica e cambia il ruolo. Non puoi toglierti da solo il ruolo di admin: deve farlo un altro amministratore.</p>
+    <p class="muted">Gli amministratori gestiscono tutto il torneo; gli allenatori solo le loro squadre. Per nominare un altro admin apri Modifica e cambia il ruolo; un admin può essere anche allenatore delle sue squadre. Non puoi toglierti da solo il ruolo di admin: deve farlo un altro amministratore.</p>
 
     @include('partials.error', ['field' => 'user'])
 
@@ -22,7 +22,7 @@
                     <div class="list-main">
                         <div class="list-title">
                             {{ $user->name }}
-                            <span @class(['badge', 'gold' => $user->isAdmin()])>{{ $user->role->label() }}</span>
+                            <span @class(['badge', 'gold' => $user->isAdmin()])>{{ $user->roleLabel() }}</span>
                             @if ($user->is(auth()->user()))
                                 <span class="muted">(tu)</span>
                             @endif

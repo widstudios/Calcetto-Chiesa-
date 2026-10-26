@@ -2,7 +2,6 @@
 
 namespace App\Imports;
 
-use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Support\Str;
 
@@ -48,7 +47,7 @@ class TeamImporter extends Importer
 
         $email = Str::lower(trim($row['email_allenatore'] ?? ''));
         if ($email !== '') {
-            $coach = User::whereRaw('lower(email) = ?', [$email])->where('role', Role::Allenatore)->first();
+            $coach = User::whereRaw('lower(email) = ?', [$email])->coaches()->first();
             $data['coach_id'] = $coach?->id ?? throw new RowError("nessun allenatore con email {$email}: carica prima gli allenatori.");
         }
 

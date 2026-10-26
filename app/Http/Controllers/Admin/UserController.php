@@ -35,7 +35,7 @@ class UserController extends Controller
     {
         $data = $this->validated($request);
 
-        User::create($data);
+        User::create($this->withCoachFlag($data));
 
         return redirect()->route('users.index')->with('status', 'Utente creato: ora può accedere con la sua email.');
     }
@@ -62,7 +62,13 @@ class UserController extends Controller
                 return false;
             }
 
-            return $user->update($data);
+            $user->update($this->withCoachFlag($data));
+            // Chi non allena più non resta tra gli allenatori delle squadre.
+            if (! $user->isCoach()) {
+                $user->teams()->detach();
+            }
+
+            return true;
         });
         if (! $saved) {
             return back()->withInput()->withErrors(['role' => 'Deve restare almeno un amministratore.']);
@@ -94,6 +100,17 @@ class UserController extends Controller
     }
 
     /**
+     * Il flag serve solo agli admin: un allenatore lo è già per ruolo.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function withCoachFlag(array $data): array
+    {
+        return [...$data, 'is_coach' => Role::from($data['role']) === Role::Admin && (bool) ($data['is_coach'] ?? false)];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function validated(Request $request, ?User $user = null): array
@@ -104,6 +121,7 @@ class UserController extends Controller
             // Per un nuovo account la password serve: è il modo per accedere.
             'password' => [$user ? 'nullable' : 'required', 'string', Password::min(8)],
             'role' => ['required', new Enum(Role::class)],
+            'is_coach' => ['boolean'],
         ]);
     }
 }

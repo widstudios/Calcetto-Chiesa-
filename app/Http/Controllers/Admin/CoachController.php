@@ -21,7 +21,7 @@ class CoachController extends Controller
 {
     public function index(): View
     {
-        $coaches = User::where('role', Role::Allenatore)->with('teams')->orderBy('name')->get();
+        $coaches = User::coaches()->with('teams')->orderBy('name')->get();
         $namedTeams = Team::whereNotNull('coach_name')->orderBy('name')->get();
 
         return view('coaches.index', [
@@ -54,14 +54,14 @@ class CoachController extends Controller
 
     public function edit(User $coach): View
     {
-        abort_unless($coach->role === Role::Allenatore, 404);
+        abort_unless($coach->isCoach(), 404);
 
         return view('coaches.form', ['coach' => $coach, 'teams' => Team::with('tournament')->orderBy('name')->get()]);
     }
 
     public function update(Request $request, User $coach): RedirectResponse
     {
-        abort_unless($coach->role === Role::Allenatore, 404);
+        abort_unless($coach->isCoach(), 404);
 
         $data = $this->validated($request, $coach);
         if (blank($data['password'] ?? null)) {
@@ -76,7 +76,15 @@ class CoachController extends Controller
 
     public function destroy(User $coach): RedirectResponse
     {
-        abort_unless($coach->role === Role::Allenatore, 404);
+        abort_unless($coach->isCoach(), 404);
+
+        // Un admin che allena resta admin: perde solo il ruolo di allenatore e le sue squadre.
+        if ($coach->isAdmin()) {
+            $coach->teams()->detach();
+            $coach->update(['is_coach' => false]);
+
+            return redirect()->route('coaches.index')->with('status', $coach->name.' non è più allenatore: resta amministratore.');
+        }
 
         $coach->delete();
 

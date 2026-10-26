@@ -49,7 +49,7 @@
                         @foreach ($people as $person)
                             <label class="choice">
                                 <input type="checkbox" name="viewers[]" value="{{ $person->id }}" @checked(in_array($person->id, $chosen, true))>
-                                <span>{{ $person->name }} <small class="hint" style="display: block; margin: 0">{{ $person->role?->label() }}</small></span>
+                                <span>{{ $person->name }} <small class="hint" style="display: block; margin: 0">{{ $person->role ? $person->roleLabel() : '' }}</small></span>
                             </label>
                         @endforeach
                     </div>
