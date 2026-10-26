@@ -14,9 +14,11 @@ use Illuminate\View\View;
  */
 class GameSheetController extends Controller
 {
-    public function edit(Game $game): View
+    public function edit(Game $game): View|RedirectResponse
     {
-        abort_unless($game->isPlayed(), 404);
+        if (! $game->isPlayed()) {
+            return $this->resultFirst($game);
+        }
 
         $game->load(['tournament', 'performances', 'homeTeam.players', 'awayTeam.players']);
 
@@ -28,7 +30,9 @@ class GameSheetController extends Controller
 
     public function update(Request $request, Game $game): RedirectResponse
     {
-        abort_unless($game->isPlayed(), 404);
+        if (! $game->isPlayed()) {
+            return $this->resultFirst($game);
+        }
 
         $playerIds = $game->homeTeam->players()->pluck('id')->merge($game->awayTeam->players()->pluck('id'));
 
@@ -63,5 +67,14 @@ class GameSheetController extends Controller
         $game->update(['mvp_player_id' => $data['mvp_player_id'] ?? null]);
 
         return redirect()->route('games.index', ['tournament' => $game->tournament_id])->with('status', 'Tabellino salvato.');
+    }
+
+    /**
+     * Il tabellino si compila solo a partita giocata: prima va messo il risultato.
+     */
+    private function resultFirst(Game $game): RedirectResponse
+    {
+        return redirect()->route('games.edit', $game)
+            ->with('status', 'Prima inserisci il risultato e metti lo stato "Giocata": poi si apre il tabellino per gol e voti.');
     }
 }
