@@ -28,6 +28,19 @@
             <input id="name" type="text" name="name" value="{{ old('name', $team->name) }}" required @error('name') aria-invalid="true" @enderror>
             @include('partials.error', ['field' => 'name'])
 
+            @php($groupTournaments = $tournaments->filter->hasGroups())
+            @if ($groupTournaments->isNotEmpty())
+                <label for="group_name">Girone</label>
+                <select id="group_name" name="group_name" style="max-width: 200px">
+                    <option value="">Nessun girone</option>
+                    @foreach (array_slice(range('A', 'Z'), 0, $groupTournaments->max(fn ($t) => count($t->groupNames()))) as $g)
+                        <option value="{{ $g }}" @selected(old('group_name', $team->group_name) === $g)>Girone {{ $g }}</option>
+                    @endforeach
+                </select>
+                <p class="hint">Solo per i tornei a gironi ({{ $groupTournaments->pluck('name')->join(', ') }}). Puoi dividere tutte le squadre insieme da Tornei → Modifica.</p>
+                @include('partials.error', ['field' => 'group_name'])
+            @endif
+
             <label for="coach_name">Nome dell'allenatore</label>
             <input id="coach_name" type="text" name="coach_name" value="{{ old('coach_name', $team->coach_name) }}">
             @include('partials.error', ['field' => 'coach_name'])

@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
         // Arbitri: dati di contatto (mai sul sito pubblico) e partite che dirigono.
         Route::resource('arbitri', RefereeController::class)->except('show')->names('referees')->parameters(['arbitri' => 'referee']);
         Route::get('games/pdf/{tournament}', [GameController::class, 'pdf'])->name('games.pdf');
+        Route::post('games/generate/{tournament}', [GameController::class, 'generate'])->name('games.generate');
+        Route::post('games/knockout/{tournament}', [GameController::class, 'knockout'])->name('games.knockout');
         Route::resource('games', GameController::class)->except('show');
         Route::get('games/{game}/tabellino', [GameSheetController::class, 'edit'])->name('games.sheet.edit');
         Route::put('games/{game}/tabellino', [GameSheetController::class, 'update'])->name('games.sheet.update');

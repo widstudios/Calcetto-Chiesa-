@@ -827,6 +827,36 @@ table.sheet input[type=radio] { width: 22px; height: 22px; accent-color: var(--a
 .doc-ext { font-size: .6875rem; font-weight: 700; letter-spacing: .02em; }
 .doc-visibility:not(:has(input[value=scelta]:checked)) .doc-people { display: none; }
 
+/* Tornei a gironi */
+.group-picker { display: grid; gap: 8px; }
+.group-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); font-weight: 500; }
+.group-row select { width: auto; min-width: 150px; flex: none; }
+@media (max-width: 480px) { .group-row { flex-direction: column; align-items: stretch; } .group-row select { width: 100%; } }
+.group-title { margin: 0; padding: 12px 16px 6px; font-size: .9375rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); border-top: 1px solid var(--line); }
+.group-title:first-child { border-top: 0; }
+.flash.danger { background: #fee2e2; color: var(--danger); border-color: #fecaca; }
+.generate-card { display: grid; gap: 16px; }
+.generate-form { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.generate-form + .generate-form { border-top: 1px solid var(--line); padding-top: 16px; }
+.generate-form .inline-check { margin-top: 4px; }
+.generate-form .btn { flex: none; }
+@media (max-width: 600px) { .generate-form { flex-direction: column; align-items: stretch; } }
+.penalties { display: block; font-size: .75rem; font-weight: 600; opacity: .8; text-align: center; }
+.bracket { display: flex; gap: 16px; overflow-x: auto; padding: 4px 16px 16px; }
+.bracket-round { flex: 1 0 220px; display: flex; flex-direction: column; justify-content: space-around; gap: 12px; }
+.bracket-round h3 { margin: 0 0 4px; font-size: .8125rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.bracket-game { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); overflow: hidden; }
+.bracket-team { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; }
+.bracket-team + .bracket-team { border-top: 1px solid var(--line); }
+.bracket-team.winner { font-weight: 700; }
+.bracket-team.out { color: var(--muted); }
+.bracket-score { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.bracket-score small { font-weight: 500; color: var(--muted); }
+.bracket-when { padding: 4px 10px 6px; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); }
+.legend-line.champion { display: flex; align-items: center; gap: 8px; font-size: 1rem; }
+.schedule-fields { margin-top: 8px; }
+.schedule-fields summary { cursor: pointer; font-weight: 600; color: var(--primary); min-height: 44px; display: flex; align-items: center; }
+
 /* ---------- Arbitri ---------- */
 .referee-games { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: .9rem; }
 .referee-games a { font-weight: 600; color: var(--text); }

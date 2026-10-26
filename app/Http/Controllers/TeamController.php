@@ -151,8 +151,11 @@ class TeamController extends Controller
      */
     private function validated(Request $request, ?Team $team = null): array
     {
-        return $request->validate([
+        $tournament = Tournament::find($request->input('tournament_id'));
+
+        $data = $request->validate([
             'tournament_id' => ['required', 'exists:tournaments,id'],
+            'group_name' => ['nullable', Rule::in($tournament?->groupNames() ?? [])],
             'name' => [
                 'required', 'string', 'max:255',
                 Rule::unique('teams')->where('tournament_id', $request->input('tournament_id'))->ignore($team),
@@ -170,6 +173,9 @@ class TeamController extends Controller
             'logo.mimes' => 'Il logo deve essere un\'immagine PNG, JPG, WEBP o GIF.',
             'logo.max' => 'Il logo può pesare al massimo 2 MB.',
             'logo.uploaded' => 'Il logo non è stato caricato: prova con un file più piccolo.',
+            'group_name.in' => $tournament?->hasGroups() ? 'Scegli uno dei gironi del torneo.' : 'Questo torneo è un campionato: lascia "Nessun girone".',
         ]);
+
+        return $data + ['group_name' => null];
     }
 }

@@ -16,12 +16,13 @@
             <div class="empty"><x-icon name="trophy" /><p>Nessun torneo. Crea il primo con "Nuovo torneo".</p></div>
         @else
             <table class="stack">
-                <thead><tr><th>Nome</th><th>Stagione</th><th>Date</th><th>Squadre</th><th>Partite</th><th><span class="sr-only">Azioni</span></th></tr></thead>
+                <thead><tr><th>Nome</th><th>Stagione</th><th>Formula</th><th>Date</th><th>Squadre</th><th>Partite</th><th><span class="sr-only">Azioni</span></th></tr></thead>
                 <tbody>
                 @foreach ($tournaments as $tournament)
                     <tr>
                         <td class="title"><strong>{{ $tournament->name }}</strong></td>
                         <td data-label="Stagione">{{ $tournament->season ?: '—' }}</td>
+                        <td data-label="Formula">{{ $tournament->format->label() }}@if ($tournament->hasGroups()) ({{ count($tournament->groupNames()) }})@endif</td>
                         <td data-label="Date">
                             @if ($tournament->starts_on || $tournament->ends_on)
                                 {{ $tournament->starts_on?->format('d/m/Y') }} – {{ $tournament->ends_on?->format('d/m/Y') }}

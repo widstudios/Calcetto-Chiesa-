@@ -2,6 +2,12 @@
 <article class="game">
     <div class="game-top">
         <div class="list-meta">
+            @if ($game->stage)
+                <span class="badge gold">{{ $game->stage->label() }}</span>
+            @endif
+            @if ($game->groupName())
+                <span class="badge">Girone {{ $game->groupName() }}</span>
+            @endif
             @if ($game->matchday)
                 <span class="badge gold">{{ $game->matchday }}ª giornata</span>
             @endif
@@ -16,11 +22,12 @@
             <span class="badge grey">{{ $game->status->label() }}</span>
         @endif
     </div>
-    @php($result = $game->isPlayed() ? $game->home_score <=> $game->away_score : null)
+    @php($winner = $game->winnerId())
+    @php($result = $game->isPlayed() ? ($winner ? ($winner === $game->home_team_id ? 1 : -1) : 0) : null)
     <div class="match">
         <div @class(['team home', 'lost' => $result === -1])><span class="team-line">{{ $game->homeTeam->name }} <x-team-badge :team="$game->homeTeam" size="sm" /></span></div>
         @if ($game->isPlayed())
-            <div class="score" aria-label="Risultato {{ $game->home_score }} a {{ $game->away_score }}">{{ $game->home_score }} – {{ $game->away_score }}</div>
+            <div class="score" aria-label="Risultato {{ $game->home_score }} a {{ $game->away_score }}@if ($game->hasPenalties()), rigori {{ $game->home_penalties }} a {{ $game->away_penalties }}@endif">{{ $game->home_score }} – {{ $game->away_score }}@if ($game->hasPenalties())<span class="penalties">rig. {{ $game->home_penalties }}–{{ $game->away_penalties }}</span>@endif</div>
         @else
             <div class="score pending">VS</div>
         @endif
