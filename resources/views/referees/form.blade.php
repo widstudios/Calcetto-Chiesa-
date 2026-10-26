@@ -28,7 +28,9 @@
         <p class="hint">Lo vedono solo gli amministratori: non compare sul sito pubblico.</p>
 
         <span class="legend">Partite che arbitra</span>
-        @php($selected = array_map('intval', old('games', $referee->exists ? $referee->games->pluck('id')->all() : [])))
+        {{-- Segnala che il modulo è stato inviato: dopo un errore resta anche la scelta "nessuna partita" --}}
+        <input type="hidden" name="games_sent" value="1">
+        @php($selected = array_map('intval', old('games_sent') ? old('games', []) : ($referee->exists ? $referee->games->pluck('id')->all() : [])))
         @forelse ($games as $game)
             <label class="check">
                 <input type="checkbox" name="games[]" value="{{ $game->id }}" @checked(in_array($game->id, $selected))>

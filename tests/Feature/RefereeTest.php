@@ -75,6 +75,35 @@ class RefereeTest extends TestCase
         $this->assertNull($referee->fresh()->phone);
     }
 
+    public function test_invalid_game_saves_nothing(): void
+    {
+        $referee = Referee::factory()->create(['phone' => '333 000 2222']);
+
+        $this->actingAs($this->admin)->post(route('referees.store'), [
+            'first_name' => 'Anna', 'last_name' => 'Rigore', 'games' => [999],
+        ])->assertSessionHasErrors('games.0');
+        $this->put(route('referees.update', $referee), [
+            'first_name' => $referee->first_name, 'last_name' => $referee->last_name, 'phone' => '', 'games' => [999],
+        ])->assertSessionHasErrors('games.0');
+
+        $this->assertDatabaseMissing('referees', ['last_name' => 'Rigore']);
+        $this->assertSame('333 000 2222', $referee->fresh()->phone);
+    }
+
+    public function test_empty_game_choice_survives_validation_error(): void
+    {
+        $referee = Referee::factory()->create();
+        $game = Game::factory()->create(['referee_id' => $referee->id]);
+
+        $this->actingAs($this->admin)->from(route('referees.edit', $referee))->put(route('referees.update', $referee), [
+            'first_name' => $referee->first_name, 'last_name' => $referee->last_name, 'phone' => 'abc', 'games_sent' => '1',
+        ])->assertSessionHasErrors('phone');
+
+        $this->get(route('referees.edit', $referee))
+            ->assertSee('value="'.$game->id.'"', false)
+            ->assertDontSee('value="'.$game->id.'" checked', false);
+    }
+
     public function test_form_offers_only_free_games_and_own_games(): void
     {
         $referee = Referee::factory()->create();

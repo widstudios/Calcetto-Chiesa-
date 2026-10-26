@@ -9,6 +9,7 @@ use App\Models\Referee;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -32,8 +33,8 @@ class RefereeController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $referee = Referee::create($this->validated($request));
-        $this->assignGames($referee, $request);
+        $data = $this->validated($request);
+        DB::transaction(fn () => $this->assignGames(Referee::create($data), $data['games']));
 
         return redirect()->route('referees.index')->with('status', 'Arbitro aggiunto.');
     }
@@ -45,8 +46,11 @@ class RefereeController extends Controller
 
     public function update(Request $request, Referee $referee): RedirectResponse
     {
-        $referee->update($this->validated($request));
-        $this->assignGames($referee, $request);
+        $data = $this->validated($request);
+        DB::transaction(function () use ($referee, $data) {
+            $referee->update($data);
+            $this->assignGames($referee, $data['games']);
+        });
 
         return redirect()->route('referees.index')->with('status', 'Arbitro aggiornato.');
     }
@@ -74,10 +78,11 @@ class RefereeController extends Controller
             ->get();
     }
 
-    private function assignGames(Referee $referee, Request $request): void
+    /**
+     * @param  array<int, int|string>  $gameIds
+     */
+    private function assignGames(Referee $referee, array $gameIds): void
     {
-        $gameIds = $request->validate(['games' => ['array'], 'games.*' => ['integer', 'exists:games,id']])['games'] ?? [];
-
         $referee->games()->whereNotIn('id', $gameIds)->update(['referee_id' => null]);
         Game::whereIn('id', $gameIds)->update(['referee_id' => $referee->id]);
     }
@@ -87,12 +92,15 @@ class RefereeController extends Controller
      */
     private function validated(Request $request): array
     {
+        // Tutto validato prima di salvare: un errore sulle partite non lascia un arbitro a metà.
         return $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[\d\s+().\/-]+$/'],
+            'games' => ['array'],
+            'games.*' => ['integer', 'exists:games,id'],
         ], [
             'phone.regex' => 'Il telefono può contenere solo numeri, spazi e il segno +.',
-        ]);
+        ]) + ['games' => []];
     }
 }
