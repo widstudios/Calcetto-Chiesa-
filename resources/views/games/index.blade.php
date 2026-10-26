@@ -38,7 +38,35 @@
                 <div>
                     <strong>Calendario automatico</strong>
                     <p class="hint">{{ $tournament->hasGroups() ? 'Crea tutte le partite di ogni girone: ognuno incontra le altre squadre del suo girone.' : 'Crea tutte le partite: ogni squadra incontra tutte le altre.' }} Le partite già inserite restano come sono.</p>
-                    <label class="inline-check"><input type="checkbox" name="return_leg" value="1"> Anche il ritorno</label>
+                    <label class="inline-check"><input type="checkbox" name="return_leg" value="1" @checked(old('return_leg'))> Anche il ritorno</label>
+                    <details class="schedule-fields" @if ($errors->hasAny(['first_day', 'from', 'to', 'minutes'])) open @endif>
+                        <summary>Dai anche data e ora (un solo campo)</summary>
+                        <div class="grid">
+                            <div>
+                                <label for="first_day">Primo giorno</label>
+                                <input id="first_day" type="date" name="first_day" value="{{ old('first_day', $tournament->starts_on?->format('Y-m-d')) }}">
+                                @include('partials.error', ['field' => 'first_day'])
+                            </div>
+                            <div>
+                                <label for="from">Dalle</label>
+                                <input id="from" type="time" name="from" value="{{ old('from', '15:00') }}">
+                                @include('partials.error', ['field' => 'from'])
+                            </div>
+                            <div>
+                                <label for="to">Alle</label>
+                                <input id="to" type="time" name="to" value="{{ old('to', '19:00') }}">
+                                @include('partials.error', ['field' => 'to'])
+                            </div>
+                            <div>
+                                <label for="minutes">Minuti a partita</label>
+                                <input id="minutes" type="number" inputmode="numeric" min="5" max="180" name="minutes" value="{{ old('minutes', 20) }}">
+                                @include('partials.error', ['field' => 'minutes'])
+                            </div>
+                        </div>
+                        <label for="venue">Campo</label>
+                        <input id="venue" type="text" name="venue" value="{{ old('venue') }}">
+                        <p class="hint">Le partite vanno una dopo l'altra, alternando i gironi, e saltano gli orari già occupati da partite di altri tornei. Se il pomeriggio non basta si continua lo stesso giorno della settimana dopo. Lascia vuoto il primo giorno per creare le partite senza orario.</p>
+                    </details>
                 </div>
                 <button class="btn secondary" type="submit"><x-icon name="calendar" /> Crea partite</button>
             </form>

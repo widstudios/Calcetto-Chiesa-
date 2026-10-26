@@ -95,7 +95,7 @@
                     @else
                         @include('public.standings-table', ['standings' => $standings])
                     @endif
-                    <p class="small muted legend-line">3 punti a vittoria, 1 a pareggio. A parità di punti conta la differenza reti.@if ($groupStandings) Nella classifica di ogni girone contano solo le partite tra squadre dello stesso girone.@endif</p>
+                    <p class="small muted legend-line">3 punti a vittoria, 1 a pareggio. A parità di punti contano scontro diretto, differenza reti, gol fatti e gol subiti.@if ($groupStandings) Nella classifica di ogni girone contano solo le partite tra squadre dello stesso girone.@endif</p>
                 @endif
             </section>
 

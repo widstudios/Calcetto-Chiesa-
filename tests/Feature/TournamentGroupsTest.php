@@ -225,4 +225,56 @@ class TournamentGroupsTest extends TestCase
         // Un solo girone: 1ª contro 4ª e 2ª contro 3ª.
         $this->assertSame(2, $tournament->knockoutGames()->count());
     }
+
+    public function test_head_to_head_breaks_ties_before_goal_difference(): void
+    {
+        $tournament = $this->groupTournament(['A' => ['Alfa', 'Beta', 'Gamma']]);
+        RoundRobin::generate($tournament);
+        $this->play('Beta', 'Alfa', 1, 0);
+        $this->play('Alfa', 'Gamma', 5, 0);
+        $this->play('Gamma', 'Beta', 1, 0);
+
+        // Tutte a 3 punti e scontri diretti pari: decide la differenza reti.
+        $this->assertSame(['Alfa', 'Beta', 'Gamma'], (new TournamentStats($tournament))->groupStandings()['A']->pluck('team.name')->all());
+
+        $other = $this->groupTournament(['A' => ['Delta', 'Epsilon', 'Zeta', 'Eta']]);
+        RoundRobin::generate($other);
+        $this->play('Epsilon', 'Delta', 1, 0);
+        $this->play('Delta', 'Zeta', 6, 0);
+        $this->play('Delta', 'Eta', 6, 0);
+        $this->play('Zeta', 'Epsilon', 1, 0);
+        $this->play('Epsilon', 'Eta', 1, 0);
+
+        // Delta ed Epsilon a pari punti: Epsilon ha vinto lo scontro diretto anche con differenza reti peggiore.
+        $standings = (new TournamentStats($other))->standings();
+        $this->assertSame(['Epsilon', 'Delta'], $standings->take(2)->pluck('team.name')->all());
+        $this->assertSame([6, 6], $standings->take(2)->pluck('points')->all());
+    }
+
+    public function test_calendar_gets_times_on_one_field_shared_by_tournaments(): void
+    {
+        $younger = $this->groupTournament(['A' => ['Alfa', 'Beta', 'Gamma'], 'B' => ['Delta', 'Epsilon', 'Zeta']]);
+        $older = $this->groupTournament(['A' => ['Eta', 'Theta', 'Iota'], 'B' => ['Kappa', 'Lambda', 'Mu']]);
+        $this->actingAs(User::factory()->admin()->create());
+        $schedule = ['first_day' => '2030-11-10', 'from' => '15:00', 'to' => '19:00', 'minutes' => 20, 'venue' => 'Campo inventato'];
+
+        $this->post(route('games.generate', $younger), $schedule)->assertSessionHasNoErrors();
+        $this->post(route('games.generate', $older), $schedule)->assertSessionHasNoErrors();
+
+        // 12 partite da 20 minuti riempiono il pomeriggio dalle 15 alle 19, senza sovrapposizioni.
+        $times = Game::orderBy('kickoff_at')->pluck('kickoff_at')->map->format('H:i');
+        $this->assertSame(['15:00', '15:20', '15:40', '16:00', '16:20', '16:40', '17:00', '17:20', '17:40', '18:00', '18:20', '18:40'], $times->all());
+        $this->assertSame(['Campo inventato'], Game::distinct()->pluck('venue')->all());
+        // Il primo torneo gioca prima, alternando i gironi.
+        $first = $younger->games()->with(['homeTeam', 'awayTeam'])->orderBy('kickoff_at')->get();
+        $this->assertSame(['A', 'B', 'A', 'B', 'A', 'B'], $first->map->groupName()->all());
+
+        // Con il campo pieno si passa alla settimana dopo.
+        $third = $this->groupTournament(['A' => ['Nu', 'Xi']]);
+        $this->post(route('games.generate', $third), $schedule);
+        $this->assertSame('2030-11-17 15:00', $third->games()->first()->kickoff_at->format('Y-m-d H:i'));
+
+        $this->post(route('games.generate', $third), ['first_day' => '2030-11-10', 'from' => '19:00', 'to' => '15:00', 'minutes' => 20])
+            ->assertSessionHasErrors('to');
+    }
 }

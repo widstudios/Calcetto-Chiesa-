@@ -18,7 +18,8 @@ class TournamentStats
     public function __construct(private Tournament $tournament) {}
 
     /**
-     * Classifica: 3 punti a vittoria, 1 a pareggio. A parità contano differenza reti, gol fatti e nome.
+     * Classifica: 3 punti a vittoria, 1 a pareggio. A parità contano scontro diretto, differenza reti,
+     * gol fatti, meno gol subiti e infine il nome (al posto del sorteggio).
      *
      * @return Collection<int, object{team: Team, played: int, won: int, drawn: int, lost: int, goals_for: int, goals_against: int, goal_difference: int, points: int, form: list<string>}>
      */
@@ -90,13 +91,29 @@ class TournamentStats
             }
         }
 
+        $rows->each(function ($row) {
+            $row->goal_difference = $row->goals_for - $row->goals_against;
+            $row->form = array_slice($row->form, -5);
+        });
+
+        // Scontro diretto: punti fatti solo nelle partite tra le squadre arrivate a pari punti.
+        $headToHead = [];
+        foreach ($rows->groupBy('points')->filter(fn ($tied) => $tied->count() > 1) as $tied) {
+            $ids = $tied->pluck('team.id')->all();
+            foreach ($played as $game) {
+                if (! in_array($game->home_team_id, $ids, true) || ! in_array($game->away_team_id, $ids, true)) {
+                    continue;
+                }
+                $result = $game->home_score <=> $game->away_score;
+                $headToHead[$game->home_team_id] = ($headToHead[$game->home_team_id] ?? 0) + [-1 => 0, 0 => 1, 1 => 3][$result];
+                $headToHead[$game->away_team_id] = ($headToHead[$game->away_team_id] ?? 0) + [-1 => 3, 0 => 1, 1 => 0][$result];
+            }
+        }
+        $h2h = fn ($row) => $headToHead[$row->team->id] ?? 0;
+
         return $rows->values()
-            ->each(function ($row) {
-                $row->goal_difference = $row->goals_for - $row->goals_against;
-                $row->form = array_slice($row->form, -5);
-            })
-            ->sort(fn ($a, $b) => [$b->points, $b->goal_difference, $b->goals_for, $a->team->name]
-                <=> [$a->points, $a->goal_difference, $a->goals_for, $b->team->name])
+            ->sort(fn ($a, $b) => [$b->points, $h2h($b), $b->goal_difference, $b->goals_for, $a->goals_against, $a->team->name]
+                <=> [$a->points, $h2h($a), $a->goal_difference, $a->goals_for, $b->goals_against, $b->team->name])
             ->values();
     }
 

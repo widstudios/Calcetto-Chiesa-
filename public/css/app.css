@@ -849,3 +849,5 @@ table.sheet input[type=radio] { width: 22px; height: 22px; accent-color: var(--a
 .bracket-score small { font-weight: 500; color: var(--muted); }
 .bracket-when { padding: 4px 10px 6px; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); }
 .legend-line.champion { display: flex; align-items: center; gap: 8px; font-size: 1rem; }
+.schedule-fields { margin-top: 8px; }
+.schedule-fields summary { cursor: pointer; font-weight: 600; color: var(--primary); min-height: 44px; display: flex; align-items: center; }

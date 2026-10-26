@@ -48,7 +48,22 @@ class GameController extends Controller
      */
     public function generate(Request $request, Tournament $tournament): RedirectResponse
     {
-        $created = RoundRobin::generate($tournament, $request->boolean('return_leg'));
+        $data = $request->validate([
+            'first_day' => ['nullable', 'date'],
+            'from' => ['nullable', 'required_with:first_day', 'date_format:H:i'],
+            'to' => ['nullable', 'required_with:first_day', 'date_format:H:i', 'after:from'],
+            'minutes' => ['nullable', 'required_with:first_day', 'integer', 'min:5', 'max:180'],
+            'venue' => ['nullable', 'string', 'max:255'],
+        ], [
+            'to.after' => 'L\'orario di fine deve venire dopo quello di inizio.',
+            '*.required_with' => 'Per dare gli orari servono giorno, inizio, fine e minuti a partita.',
+        ]);
+        $schedule = ! empty($data['first_day']) ? [
+            'date' => $data['first_day'], 'from' => $data['from'], 'to' => $data['to'],
+            'minutes' => (int) $data['minutes'], 'venue' => $data['venue'] ?? null,
+        ] : null;
+
+        $created = RoundRobin::generate($tournament, $request->boolean('return_leg'), $schedule);
         $back = redirect()->route('games.index', ['tournament' => $tournament->id]);
 
         if (! $created) {
@@ -57,7 +72,9 @@ class GameController extends Controller
                 : 'Nessuna partita da creare: ci sono già tutte, oppure servono almeno due squadre.');
         }
 
-        return $back->with('status', "Create {$created} partite. Ora puoi mettere data, ora e campo di ognuna.");
+        return $back->with('status', $schedule
+            ? "Create {$created} partite con data e ora. Puoi sempre cambiarle una per una."
+            : "Create {$created} partite. Ora puoi mettere data, ora e campo di ognuna.");
     }
 
     /**
