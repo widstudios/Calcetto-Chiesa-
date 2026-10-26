@@ -485,7 +485,7 @@ body.public .topbar { position: static; box-shadow: none; }
 .card-head h2 .icon { color: var(--primary); }
 .public-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start; }
 .public-grid > div > .card:last-child { margin-bottom: 0; }
-.leaderboards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.leaderboards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 @media (max-width: 960px) { .public-grid, .leaderboards { grid-template-columns: 1fr; } }
 section[id] { scroll-margin-top: 64px; }
 

@@ -42,4 +42,17 @@
             </table>
         </div>
     @endif
+    @if ($goalkeepers->isNotEmpty())
+        <div class="avoid">
+            <h2>Miglior portiere</h2>
+            <table class="grid">
+                <thead><tr><th class="num">#</th><th>Portiere</th><th>Squadra</th><th class="num">Subiti a partita</th><th class="num">Partite</th><th class="num">Gol subiti</th><th class="num">Porta inviolata</th></tr></thead>
+                <tbody>
+                    @foreach ($goalkeepers as $player)
+                        <tr><td class="num">{{ $loop->iteration }}</td><td>{{ $player->fullName() }}</td><td>{{ $player->team->name }}</td><td class="num">{{ number_format($player->average_conceded, 2, ',', '') }}</td><td class="num">{{ $player->keeper_games }}</td><td class="num">{{ $player->goals_conceded }}</td><td class="num">{{ $player->clean_sheets }}</td></tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
 @endsection

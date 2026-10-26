@@ -48,6 +48,7 @@ class PublicController extends Controller
             'groupStandings' => $tournament->hasGroups() ? $stats->groupStandings() : null,
             'scorers' => $stats->topScorers(),
             'ratings' => $stats->bestRatings(),
+            'goalkeepers' => $stats->bestGoalkeepers(),
             'mvps' => $stats->mvpLeaders(),
             'latestResults' => $played->sortByDesc(fn ($g) => [$g->isKnockout(), $g->matchday, $g->kickoff_at])->take(4),
             'nextGames' => $games->where('status', '!=', GameStatus::Giocata)->sortBy(fn ($g) => [$g->kickoff_at === null, $g->kickoff_at])->take(4),
@@ -75,6 +76,7 @@ class PublicController extends Controller
             'groupStandings' => $tournament->hasGroups() ? $stats->groupStandings() : null,
             'scorers' => $stats->topScorers(),
             'ratings' => $stats->bestRatings(),
+            'goalkeepers' => $stats->bestGoalkeepers(),
         ], 'classifica '.$tournament->name);
     }
 }

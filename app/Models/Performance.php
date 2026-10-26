@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Riga del tabellino: gol segnati e voto (pagella) di un calciatore in una partita.
+ * Riga del tabellino: gol segnati, voto (pagella) e se ha giocato in porta, per un calciatore in una partita.
  */
-#[Fillable(['game_id', 'player_id', 'goals', 'rating'])]
+#[Fillable(['game_id', 'player_id', 'goals', 'rating', 'goalkeeper'])]
 class Performance extends Model
 {
     protected function casts(): array
@@ -17,6 +17,7 @@ class Performance extends Model
         return [
             'goals' => 'integer',
             'rating' => 'float',
+            'goalkeeper' => 'boolean',
         ];
     }
 

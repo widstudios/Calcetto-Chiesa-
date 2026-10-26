@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
- * Tabellino di una partita giocata: marcatori, voti e migliore in campo.
+ * Tabellino di una partita giocata: marcatori, voti, portieri e migliore in campo.
  */
 class GameSheetController extends Controller
 {
@@ -41,27 +41,32 @@ class GameSheetController extends Controller
             'players.*.goals' => ['nullable', 'integer', 'min:0', 'max:30'],
             'players.*.rating' => ['nullable', 'numeric', 'between:1,10'],
             'mvp_player_id' => ['nullable', Rule::in($playerIds->all())],
+            'goalkeepers' => ['array'],
+            'goalkeepers.'.$game->home_team_id => ['nullable', Rule::in($game->homeTeam->players()->pluck('id')->all())],
+            'goalkeepers.'.$game->away_team_id => ['nullable', Rule::in($game->awayTeam->players()->pluck('id')->all())],
         ], [
+            'goalkeepers.*' => 'Il portiere deve essere un calciatore della sua squadra.',
             'players.*.goals.*' => 'I gol devono essere un numero da 0 a 30.',
             'players.*.rating.*' => 'Il voto va da 1 a 10.',
             'mvp_player_id.in' => 'Il migliore in campo deve giocare in una delle due squadre.',
         ]);
 
-        foreach ($data['players'] ?? [] as $playerId => $row) {
-            if (! $playerIds->contains((int) $playerId)) {
-                continue;
-            }
+        $keepers = array_map('intval', array_filter($data['goalkeepers'] ?? []));
 
+        foreach ($playerIds as $playerId) {
+            $row = $data['players'][$playerId] ?? [];
             $goals = (int) ($row['goals'] ?? 0);
             $rating = $row['rating'] ?? null;
+            $goalkeeper = in_array($playerId, $keepers, true);
 
-            if ($goals === 0 && blank($rating)) {
+            // Una riga serve solo a chi ha segnato, ha un voto o ha giocato in porta.
+            if ($goals === 0 && blank($rating) && ! $goalkeeper) {
                 $game->performances()->where('player_id', $playerId)->delete();
 
                 continue;
             }
 
-            $game->performances()->updateOrCreate(['player_id' => $playerId], ['goals' => $goals, 'rating' => $rating]);
+            $game->performances()->updateOrCreate(['player_id' => $playerId], ['goals' => $goals, 'rating' => $rating, 'goalkeeper' => $goalkeeper]);
         }
 
         $game->update(['mvp_player_id' => $data['mvp_player_id'] ?? null]);

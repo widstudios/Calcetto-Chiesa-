@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Enums\GameStatus;
 use App\Models\Game;
+use App\Models\Performance;
 use App\Models\Player;
 use App\Models\Team;
 use App\Models\Tournament;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
- * Numeri del torneo come in un campionato vero: classifica, marcatori, pagelle e migliori in campo.
+ * Numeri del torneo come in un campionato vero: classifica, marcatori, pagelle, portieri e migliori in campo.
  */
 class TournamentStats
 {
@@ -158,6 +159,36 @@ class TournamentStats
             ->whereHas('mvpGames', fn ($q) => $q->where('tournament_id', $this->tournament->id))
             ->orderByDesc('mvp_count')->orderBy('last_name')
             ->limit($limit)->get();
+    }
+
+    /**
+     * Miglior portiere: meno gol subiti a partita, contando solo le partite in cui è stato
+     * segnato in porta nel tabellino. A parità vince chi ha giocato più partite.
+     *
+     * @return Collection<int, Player>
+     */
+    public function bestGoalkeepers(int $limit = 10): Collection
+    {
+        $performances = Performance::query()
+            ->where('goalkeeper', true)
+            ->whereIn('game_id', Game::select('id')->where('tournament_id', $this->tournament->id)->where('status', GameStatus::Giocata))
+            ->with(['game', 'player.team'])
+            ->get()
+            ->filter(fn ($p) => $p->player);
+
+        return $performances->groupBy('player_id')
+            ->map(function ($rows) {
+                $player = $rows->first()->player;
+                $player->keeper_games = $rows->count();
+                $player->goals_conceded = $rows->sum(fn ($p) => $p->player->team_id === $p->game->home_team_id ? $p->game->away_score : $p->game->home_score);
+                $player->clean_sheets = $rows->filter(fn ($p) => ($p->player->team_id === $p->game->home_team_id ? $p->game->away_score : $p->game->home_score) === 0)->count();
+                $player->average_conceded = $player->goals_conceded / $player->keeper_games;
+
+                return $player;
+            })
+            ->sort(fn ($a, $b) => [$a->average_conceded, $b->keeper_games, $a->last_name] <=> [$b->average_conceded, $a->keeper_games, $b->last_name])
+            ->take($limit)
+            ->values();
     }
 
     /**
