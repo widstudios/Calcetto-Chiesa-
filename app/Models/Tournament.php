@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use App\Enums\TournamentFormat;
+use App\Enums\TournamentRules;
 use Database\Factories\TournamentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'season', 'format', 'groups_count', 'qualifiers_per_group', 'starts_on', 'ends_on', 'lineup_max_players', 'description'])]
+#[Fillable(['name', 'season', 'format', 'groups_count', 'qualifiers_per_group', 'starts_on', 'ends_on', 'lineup_max_players', 'rules_type', 'rules_text', 'rules_pdf', 'description'])]
 class Tournament extends Model
 {
     /** @use HasFactory<TournamentFactory> */
@@ -18,7 +20,13 @@ class Tournament extends Model
     /** Massimo di gironi che si possono creare in un torneo. */
     public const MAX_GROUPS = 8;
 
-    protected $attributes = ['format' => 'campionato'];
+    protected $attributes = ['format' => 'campionato', 'rules_type' => 'csi'];
+
+    protected static function booted(): void
+    {
+        // Il PDF del regolamento sta in public/uploads: va via con il torneo.
+        static::deleted(fn (Tournament $tournament) => $tournament->rules_pdf && Storage::disk('uploads')->delete($tournament->rules_pdf));
+    }
 
     protected function casts(): array
     {
@@ -27,6 +35,7 @@ class Tournament extends Model
             'ends_on' => 'date',
             'lineup_max_players' => 'integer',
             'format' => TournamentFormat::class,
+            'rules_type' => TournamentRules::class,
             'groups_count' => 'integer',
             'qualifiers_per_group' => 'integer',
         ];
@@ -49,6 +58,22 @@ class Tournament extends Model
         }
 
         return array_slice(range('A', 'Z'), 0, max(1, min(self::MAX_GROUPS, $this->groups_count ?? 2)));
+    }
+
+    /**
+     * Il torneo segue un regolamento proprio invece di quello CSI.
+     */
+    public function hasOwnRules(): bool
+    {
+        return $this->rules_type === TournamentRules::Proprio;
+    }
+
+    /**
+     * Indirizzo pubblico del PDF del regolamento proprio, se caricato.
+     */
+    public function rulesPdfUrl(): ?string
+    {
+        return $this->rules_pdf ? asset('uploads/'.$this->rules_pdf) : null;
     }
 
     /**
