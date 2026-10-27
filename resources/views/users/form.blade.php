@@ -20,7 +20,7 @@
         <label for="role">Ruolo *</label>
         @php($isSelf = $user->exists && $user->is(auth()->user()))
         <select id="role" name="role" required @error('role') aria-invalid="true" @enderror>
-            @foreach (\App\Enums\Role::cases() as $role)
+            @foreach ([\App\Enums\Role::Admin, \App\Enums\Role::Allenatore] as $role)
                 <option value="{{ $role->value }}" @selected(old('role', $user->role?->value) === $role->value) @disabled($isSelf && $role !== \App\Enums\Role::Admin)>{{ $role->label() }}</option>
             @endforeach
         </select>

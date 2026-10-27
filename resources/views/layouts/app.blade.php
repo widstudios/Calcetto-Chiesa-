@@ -15,8 +15,8 @@
 </head>
 @auth
     @php
-        $navItems = auth()->user()->isAdmin()
-            ? [
+        $navItems = match (true) {
+            auth()->user()->isAdmin() => [
                 ['dashboard', 'dashboard', 'Home', 'home'],
                 ['tournaments.index', 'tournaments.*', 'Tornei', 'trophy'],
                 ['teams.index', ['teams.index', 'teams.create', 'teams.show', 'teams.edit', 'teams.players.*'], 'Squadre', 'users'],
@@ -28,8 +28,12 @@
                 ['drills.index', 'drills.*', 'Esercizi', 'cone'],
                 ['documents.index', 'documents.*', 'Documenti', 'file'],
                 ['imports.index', 'imports.*', 'Importa', 'upload'],
-            ]
-            : [
+            ],
+            // L'arbitro vede solo le sue partite.
+            auth()->user()->isReferee() => [
+                ['dashboard', 'dashboard', 'Le mie partite', 'whistle'],
+            ],
+            default => [
                 ['dashboard', 'dashboard', 'Home', 'home'],
                 ['teams.index', ['teams.index', 'teams.show', 'teams.players.*'], 'La mia rosa', 'shirt'],
                 ['calendar.index', 'calendar.*', 'Calendario', 'calendar'],
@@ -37,7 +41,8 @@
                 ['lineups.index', ['lineups.*', 'teams.lineups.*'], 'Distinte', 'clipboard'],
                 ['drills.index', 'drills.*', 'Esercizi', 'cone'],
                 ['documents.index', 'documents.*', 'Documenti', 'file'],
-            ];
+            ],
+        };
     @endphp
     <body @class(['has-nav', 'nav-wide' => count($navItems) > 6])>
     <header class="topbar">
@@ -64,7 +69,9 @@
                     <a @class(['icon-btn', 'active' => request()->routeIs('users.*')]) href="{{ route('users.index') }}" title="Utenti e ruoli" aria-label="Utenti e ruoli"><x-icon name="users" /></a>
                     <a @class(['icon-btn', 'active' => request()->routeIs('settings.*')]) href="{{ route('settings.edit') }}" title="Impostazioni (nome, logo e colori)" aria-label="Impostazioni"><x-icon name="settings" /></a>
                 @endif
-                <a @class(['icon-btn', 'active' => request()->routeIs('guide')]) href="{{ route('guide') }}" title="Guida all'app" aria-label="Guida all'app"><x-icon name="help" /></a>
+                @unless (auth()->user()->isReferee())
+                    <a @class(['icon-btn', 'active' => request()->routeIs('guide')]) href="{{ route('guide') }}" title="Guida all'app" aria-label="Guida all'app"><x-icon name="help" /></a>
+                @endunless
                 <a class="icon-btn" href="{{ route('password.edit') }}" title="Cambia password" aria-label="Cambia password"><x-icon name="key" /></a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

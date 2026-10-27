@@ -27,6 +27,16 @@
         @include('partials.error', ['field' => 'phone'])
         <p class="hint">Lo vedono solo gli amministratori: non compare sul sito pubblico.</p>
 
+        <span class="legend">Accesso all'app</span>
+        <p class="hint" style="margin-top: 0">Con email e password l'arbitro entra nell'app e vede solo le partite che arbitra, senza poter modificare nulla. Lascia l'email vuota se non deve accedere (svuotala per togliergli l'accesso).</p>
+        <label for="email">Email</label>
+        <input id="email" type="email" name="email" value="{{ old('email', $referee->user?->email) }}" autocomplete="off" @error('email') aria-invalid="true" @enderror>
+        @include('partials.error', ['field' => 'email'])
+
+        <label for="password">{{ $referee->user ? 'Nuova password (lascia vuoto per non cambiarla)' : 'Password (almeno 8 caratteri)' }}</label>
+        <input id="password" type="password" name="password" autocomplete="new-password" @error('password') aria-invalid="true" @enderror>
+        @include('partials.error', ['field' => 'password'])
+
         <span class="legend">Partite che arbitra</span>
         {{-- Segnala che il modulo è stato inviato: dopo un errore resta anche la scelta "nessuna partita" --}}
         <input type="hidden" name="games_sent" value="1">

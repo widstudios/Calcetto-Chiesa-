@@ -10,7 +10,7 @@
         </div>
         <a class="btn" href="{{ route('users.create') }}"><x-icon name="plus" /> Nuovo utente</a>
     </div>
-    <p class="muted">Gli amministratori gestiscono tutto il torneo; gli allenatori solo le loro squadre. Per nominare un altro admin apri Modifica e cambia il ruolo; un admin può essere anche allenatore delle sue squadre. Non puoi toglierti da solo il ruolo di admin: deve farlo un altro amministratore.</p>
+    <p class="muted">Gli amministratori gestiscono tutto il torneo; gli allenatori solo le loro squadre; gli arbitri vedono soltanto le partite che arbitrano (il loro accesso si dà dalla pagina Arbitri). Per nominare un altro admin apri Modifica e cambia il ruolo; un admin può essere anche allenatore delle sue squadre. Non puoi toglierti da solo il ruolo di admin: deve farlo un altro amministratore.</p>
 
     @include('partials.error', ['field' => 'user'])
 
@@ -32,7 +32,7 @@
                         </div>
                     </div>
                     <div class="actions">
-                        <a class="btn small secondary" href="{{ route('users.edit', $user) }}"><x-icon name="pencil" /> <span class="btn-text">Modifica</span></a>
+                        <a class="btn small secondary" href="{{ $user->isReferee() && $user->referee ? route('referees.edit', $user->referee) : route('users.edit', $user) }}"><x-icon name="pencil" /> <span class="btn-text">Modifica</span></a>
                         @unless ($user->is(auth()->user()))
                             @include('partials.delete', ['action' => route('users.destroy', $user), 'confirm' => 'Eliminare l\'account di '.$user->name.'?'])
                         @endunless

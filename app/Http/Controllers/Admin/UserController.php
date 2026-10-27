@@ -22,7 +22,7 @@ class UserController extends Controller
     public function index(): View
     {
         return view('users.index', [
-            'users' => User::orderByRaw('role = ? desc', [Role::Admin->value])->orderBy('name')->get(),
+            'users' => User::with('referee')->orderByRaw('role = ? desc', [Role::Admin->value])->orderBy('name')->get(),
         ]);
     }
 
@@ -40,8 +40,13 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('status', 'Utente creato: ora può accedere con la sua email.');
     }
 
-    public function edit(User $user): View
+    public function edit(User $user): View|RedirectResponse
     {
+        // L'accesso degli arbitri si gestisce dalla loro scheda.
+        if ($user->isReferee() && $user->referee) {
+            return redirect()->route('referees.edit', $user->referee);
+        }
+
         return view('users.form', ['user' => $user]);
     }
 
@@ -51,6 +56,8 @@ class UserController extends Controller
         if (blank($data['password'] ?? null)) {
             unset($data['password']);
         }
+
+        abort_if($user->isReferee(), 404);
 
         $demoting = $user->isAdmin() && Role::from($data['role']) !== Role::Admin;
         if ($demoting && $user->is($request->user())) {
@@ -120,7 +127,8 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user)],
             // Per un nuovo account la password serve: è il modo per accedere.
             'password' => [$user ? 'nullable' : 'required', 'string', Password::min(8)],
-            'role' => ['required', new Enum(Role::class)],
+            // Gli arbitri ricevono l'accesso dalla pagina Arbitri, collegato alla loro scheda.
+            'role' => ['required', (new Enum(Role::class))->except(Role::Arbitro)],
             'is_coach' => ['boolean'],
         ]);
     }

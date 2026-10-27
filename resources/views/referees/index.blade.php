@@ -12,7 +12,7 @@
             <a class="btn" href="{{ route('referees.create') }}"><x-icon name="plus" /> Nuovo arbitro</a>
         </div>
     </div>
-    <p class="muted">Nome, cognome e telefono degli arbitri e le partite che dirigono. Il telefono lo vedono solo gli amministratori, mai il sito pubblico.</p>
+    <p class="muted">Nome, cognome e telefono degli arbitri e le partite che dirigono. Il telefono lo vedono solo gli amministratori, mai il sito pubblico. Se dai a un arbitro email e password (da Modifica), entra nell'app e vede solo le sue partite, senza poter cambiare nulla.</p>
 
     @if ($referees->isNotEmpty())
         <div class="stats">
@@ -39,6 +39,9 @@
                             <div class="list-title">
                                 {{ $referee->fullName() }}
                                 <span class="badge">{{ $referee->games->count() === 1 ? '1 partita' : $referee->games->count().' partite' }}</span>
+                                @if ($referee->user)
+                                    <span class="badge gold" title="Entra con {{ $referee->user->email }}">Accede all'app</span>
+                                @endif
                             </div>
                             <div class="list-meta">
                                 @if ($referee->phone)

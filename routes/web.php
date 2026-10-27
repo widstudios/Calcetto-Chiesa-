@@ -38,46 +38,49 @@ Route::middleware('auth')->group(function () {
     Route::get('/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('/password', [PasswordController::class, 'update'])->middleware('throttle:5,1')->name('password.update');
 
-    // Guida all'uso dell'app per i mister.
-    Route::view('guida', 'guide.index')->name('guide');
+    // Tutto il gestionale delle squadre: admin e allenatori. Gli arbitri vedono solo le loro partite nella Home.
+    Route::middleware('role:admin,allenatore')->group(function () {
+        // Guida all'uso dell'app per i mister.
+        Route::view('guida', 'guide.index')->name('guide');
 
-    // Squadre: l'admin le gestisce tutte, l'allenatore vede e modifica la rosa delle sue.
-    Route::resource('teams', TeamController::class);
-    Route::get('teams/{team}/pdf', [TeamController::class, 'pdf'])->name('teams.pdf');
-    Route::scopeBindings()->group(function () {
-        Route::resource('teams.players', PlayerController::class)->except(['index', 'show']);
-        Route::resource('teams.trainings', TrainingController::class)->only(['store', 'destroy']);
+        // Squadre: l'admin le gestisce tutte, l'allenatore vede e modifica la rosa delle sue.
+        Route::resource('teams', TeamController::class);
+        Route::get('teams/{team}/pdf', [TeamController::class, 'pdf'])->name('teams.pdf');
+        Route::scopeBindings()->group(function () {
+            Route::resource('teams.players', PlayerController::class)->except(['index', 'show']);
+            Route::resource('teams.trainings', TrainingController::class)->only(['store', 'destroy']);
+        });
+
+        // Appello degli allenamenti e distinte di gara: l'allenatore per le sue squadre, l'admin per tutte.
+        Route::get('presenze', [AttendanceController::class, 'index'])->name('attendances.index');
+        Route::get('teams/{team}/presenze', [AttendanceController::class, 'show'])->name('teams.attendances.show');
+        Route::get('teams/{team}/presenze/pdf', [AttendanceController::class, 'pdf'])->name('teams.attendances.pdf');
+        Route::get('teams/{team}/presenze/appello', [AttendanceController::class, 'edit'])->name('teams.attendances.edit');
+        Route::put('teams/{team}/presenze/appello', [AttendanceController::class, 'update'])->name('teams.attendances.update');
+        Route::delete('teams/{team}/presenze/appello', [AttendanceController::class, 'destroy'])->name('teams.attendances.destroy');
+        Route::get('distinte', [LineupController::class, 'index'])->name('lineups.index');
+        Route::scopeBindings()->prefix('teams/{team}/distinte')->name('teams.lineups.')->controller(LineupController::class)->group(function () {
+            Route::get('/', 'teamIndex')->name('index');
+            Route::get('nuova', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('{lineup}', 'edit')->name('edit');
+            Route::put('{lineup}', 'update')->name('update');
+            Route::delete('{lineup}', 'destroy')->name('destroy');
+            Route::get('{lineup}/stampa', 'print')->name('print');
+            Route::get('{lineup}/pdf', 'pdf')->name('pdf');
+        });
+
+        // Calendario settimanale: allenamenti, partite ed eventi (riunioni, incontri...) delle proprie squadre.
+        Route::get('calendario', [CalendarController::class, 'index'])->name('calendar.index');
+        Route::resource('calendario/eventi', CalendarController::class)->except(['index', 'show'])->names('calendar.events')->parameters(['eventi' => 'event']);
+
+        // Documenti allegati: chi carica sceglie se li vedono tutti o solo alcune persone.
+        Route::get('documenti/{document}/file', [DocumentController::class, 'download'])->name('documents.download');
+        Route::resource('documenti', DocumentController::class)->except('show')->names('documents')->parameters(['documenti' => 'document']);
+
+        // Libreria allenamenti: tutti la consultano, solo l'admin la modifica.
+        Route::get('esercizi', [DrillController::class, 'index'])->name('drills.index');
     });
-
-    // Appello degli allenamenti e distinte di gara: l'allenatore per le sue squadre, l'admin per tutte.
-    Route::get('presenze', [AttendanceController::class, 'index'])->name('attendances.index');
-    Route::get('teams/{team}/presenze', [AttendanceController::class, 'show'])->name('teams.attendances.show');
-    Route::get('teams/{team}/presenze/pdf', [AttendanceController::class, 'pdf'])->name('teams.attendances.pdf');
-    Route::get('teams/{team}/presenze/appello', [AttendanceController::class, 'edit'])->name('teams.attendances.edit');
-    Route::put('teams/{team}/presenze/appello', [AttendanceController::class, 'update'])->name('teams.attendances.update');
-    Route::delete('teams/{team}/presenze/appello', [AttendanceController::class, 'destroy'])->name('teams.attendances.destroy');
-    Route::get('distinte', [LineupController::class, 'index'])->name('lineups.index');
-    Route::scopeBindings()->prefix('teams/{team}/distinte')->name('teams.lineups.')->controller(LineupController::class)->group(function () {
-        Route::get('/', 'teamIndex')->name('index');
-        Route::get('nuova', 'create')->name('create');
-        Route::post('/', 'store')->name('store');
-        Route::get('{lineup}', 'edit')->name('edit');
-        Route::put('{lineup}', 'update')->name('update');
-        Route::delete('{lineup}', 'destroy')->name('destroy');
-        Route::get('{lineup}/stampa', 'print')->name('print');
-        Route::get('{lineup}/pdf', 'pdf')->name('pdf');
-    });
-
-    // Calendario settimanale: allenamenti, partite ed eventi (riunioni, incontri...) delle proprie squadre.
-    Route::get('calendario', [CalendarController::class, 'index'])->name('calendar.index');
-    Route::resource('calendario/eventi', CalendarController::class)->except(['index', 'show'])->names('calendar.events')->parameters(['eventi' => 'event']);
-
-    // Documenti allegati: chi carica sceglie se li vedono tutti o solo alcune persone.
-    Route::get('documenti/{document}/file', [DocumentController::class, 'download'])->name('documents.download');
-    Route::resource('documenti', DocumentController::class)->except('show')->names('documents')->parameters(['documenti' => 'document']);
-
-    // Libreria allenamenti: tutti la consultano, solo l'admin la modifica.
-    Route::get('esercizi', [DrillController::class, 'index'])->name('drills.index');
 
     Route::middleware('role:admin')->group(function () {
         Route::resource('esercizi', DrillController::class)->except(['index', 'show'])->names('drills')->parameters(['esercizi' => 'drill']);
