@@ -24,6 +24,19 @@ class DashboardController extends Controller
             ]);
         }
 
+        if ($user->isReferee()) {
+            // Solo le partite che arbitra: in sola lettura, senza dati di contatto.
+            $games = Game::with(['tournament', 'homeTeam', 'awayTeam', 'mvp', 'performances.player'])
+                ->whereRelation('referee', 'user_id', $user->id)
+                ->orderByRaw('kickoff_at is null')->orderBy('kickoff_at')->orderBy('matchday')
+                ->get();
+
+            return view('dashboard.referee', [
+                'upcoming' => $games->reject->isPlayed(),
+                'played' => $games->filter->isPlayed()->reverse(),
+            ]);
+        }
+
         return view('dashboard.coach', [
             'teams' => $user->teams()
                 ->with(['tournament', 'coaches', 'players' => fn ($q) => $q->orderBy('shirt_number')])

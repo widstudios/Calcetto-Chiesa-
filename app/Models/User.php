@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -47,6 +48,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Scheda arbitro collegata a questo account (solo per il ruolo arbitro).
+     *
+     * @return HasOne<Referee, $this>
+     */
+    public function referee(): HasOne
+    {
+        return $this->hasOne(Referee::class);
+    }
+
+    /**
      * L'allenatore è tesserato al CSI.
      */
     public function isCsiRegistered(): bool
@@ -57,6 +68,11 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === Role::Admin;
+    }
+
+    public function isReferee(): bool
+    {
+        return $this->role === Role::Arbitro;
     }
 
     /**
