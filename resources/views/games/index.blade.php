@@ -70,14 +70,18 @@
                 </div>
                 <button class="btn secondary" type="submit"><x-icon name="calendar" /> Crea partite</button>
             </form>
-            @if ($tournament->hasGroups())
+            @if ($tournament->hasGroups() || $tournament->qualifiers_per_group)
                 <form method="POST" action="{{ route('games.knockout', $tournament) }}" class="generate-form">
                     @csrf
                     <div>
                         <strong>Fase finale</strong>
                         <p class="hint">
                             @if ($tournament->qualifiers_per_group)
-                                Passano le prime {{ $tournament->qualifiers_per_group }} di ogni girone. Si crea quando tutte le partite dei gironi sono giocate; i turni dopo si creano da soli inserendo i risultati.
+                                Passano le prime {{ $tournament->qualifiers_per_group }}{{ $tournament->hasGroups() ? ' di ogni girone' : ' in classifica' }}.
+                                @if ($tournament->two_leg_stages)
+                                    Con andata e ritorno: {{ collect($tournament->two_leg_stages)->map(fn ($s) => \App\Enums\GameStage::from($s)->label())->join(', ') }}.
+                                @endif
+                                Si crea quando tutte le partite {{ $tournament->hasGroups() ? 'dei gironi' : 'del girone' }} sono giocate; i turni dopo si creano da soli inserendo i risultati.
                             @else
                                 Per usarla indica nel torneo quante squadre per girone passano il turno.
                             @endif

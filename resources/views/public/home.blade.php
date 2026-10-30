@@ -32,7 +32,7 @@
 
             @if ($next)
                 <a class="next-match" href="#calendario">
-                    <span class="next-label">Prossima partita @if ($next->stage)<span>· {{ $next->stage->label() }}</span>@elseif ($next->matchday)<span>· {{ $next->matchday }}ª giornata</span>@endif</span>
+                    <span class="next-label">Prossima partita @if ($next->stage)<span>· {{ $next->stageLabel() }}</span>@elseif ($next->matchday)<span>· {{ $next->matchday }}ª giornata</span>@endif</span>
                     <span class="next-teams">
                         <span class="next-team"><x-team-badge :team="$next->homeTeam" /><strong>{{ $next->homeTeam->name }}</strong></span>
                         <span class="next-vs">vs</span>
@@ -147,26 +147,43 @@
                     @foreach ($knockout as $stage => $stageGames)
                         <div class="bracket-round">
                             <h3>{{ \App\Enums\GameStage::from($stage)->label() }}</h3>
-                            @foreach ($stageGames as $game)
-                                @php($winner = $game->winnerId())
+                            @foreach ($stageGames->groupBy('bracket_slot') as $legs)
+                                @php($legs = $legs->sortBy('leg')->values())
+                                @php($first = $legs->first())
+                                @php($winner = \App\Support\Knockout::tieWinner($legs))
+                                @php($goals = \App\Support\Knockout::aggregate($legs))
+                                @php($penaltyGame = $legs->last()->hasPenalties() ? $legs->last() : null)
                                 <div class="bracket-game">
-                                    @foreach ([[$game->homeTeam, $game->home_score, $game->home_penalties], [$game->awayTeam, $game->away_score, $game->away_penalties]] as [$team, $score, $penalties])
+                                    @foreach ([$first->homeTeam, $first->awayTeam] as $team)
                                         <div @class(['bracket-team', 'winner' => $winner === $team->id, 'out' => $winner && $winner !== $team->id])>
                                             <span class="team-line"><x-team-badge :team="$team" size="sm" /> {{ $team->name }}</span>
-                                            <span class="bracket-score">@if ($game->isPlayed()){{ $score }}@if ($game->hasPenalties()) <small>({{ $penalties }})</small>@endif @else – @endif</span>
+                                            <span class="bracket-score">
+                                                @if ($legs->contains->isPlayed())
+                                                    @if ($legs->count() > 1)<small>{{ $legs->map(fn ($g) => $g->isPlayed() ? ($g->home_team_id === $team->id ? $g->home_score : $g->away_score) : '–')->join(' + ') }} =</small>@endif
+                                                    {{ $goals[$team->id] ?? 0 }}
+                                                    @if ($penaltyGame) <small>({{ $penaltyGame->home_team_id === $team->id ? $penaltyGame->home_penalties : $penaltyGame->away_penalties }})</small>@endif
+                                                @else
+                                                    –
+                                                @endif
+                                            </span>
                                         </div>
                                     @endforeach
-                                    @if (! $game->isPlayed() && $game->kickoff_at)
-                                        <div class="bracket-when">{{ $game->kickoff_at->format('d/m · H:i') }}</div>
+                                    @php($nextLeg = $legs->first(fn ($g) => ! $g->isPlayed()))
+                                    @if ($legs->count() > 1 || ($nextLeg && $nextLeg->kickoff_at))
+                                        <div class="bracket-when">
+                                            {{ $legs->count() > 1 ? 'Andata e ritorno' : '' }}
+                                            @if ($nextLeg?->kickoff_at){{ $legs->count() > 1 ? ' · '.($nextLeg->leg === 2 ? 'ritorno' : 'andata').' ' : '' }}{{ $nextLeg->kickoff_at->format('d/m · H:i') }}@endif
+                                        </div>
                                     @endif
                                 </div>
                             @endforeach
                         </div>
                     @endforeach
                 </div>
-                @php($final = $knockout->get('finale')?->first())
-                @if ($final && $final->winnerId())
-                    <p class="legend-line champion"><x-icon name="trophy" /> Vince il torneo <strong>{{ $final->winnerId() === $final->home_team_id ? $final->homeTeam->name : $final->awayTeam->name }}</strong></p>
+                @php($final = $knockout->get('finale'))
+                @php($champion = $final ? \App\Support\Knockout::tieWinner($final) : null)
+                @if ($champion)
+                    <p class="legend-line champion"><x-icon name="trophy" /> Vince il torneo <strong>{{ $final->first()->home_team_id === $champion ? $final->first()->homeTeam->name : $final->first()->awayTeam->name }}</strong></p>
                 @endif
             </section>
         @endif

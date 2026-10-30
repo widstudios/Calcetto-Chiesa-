@@ -11,8 +11,9 @@ use Illuminate\Support\Collection;
 use RuntimeException;
 
 /**
- * Fase finale a eliminazione diretta dopo i gironi: le prime di ogni girone passano il turno,
+ * Fase finale a eliminazione diretta dopo i gironi (o il girone unico): le prime passano il turno,
  * poi quarti, semifinali e finale si creano da soli man mano che si inseriscono i risultati.
+ * Ogni turno può essere a partita secca o con andata e ritorno.
  */
 class Knockout
 {
@@ -25,7 +26,9 @@ class Knockout
     public static function qualifiers(Tournament $tournament): Collection
     {
         $perGroup = $tournament->qualifiers_per_group ?? 0;
-        $groups = (new TournamentStats($tournament))->groupStandings()->except('');
+        $stats = new TournamentStats($tournament);
+        // Girone unico (campionato): una sola classifica.
+        $groups = $tournament->hasGroups() ? $stats->groupStandings()->except('') : collect(['' => $stats->standings()]);
 
         $list = collect();
         for ($position = 1; $position <= $perGroup; $position++) {
@@ -46,8 +49,8 @@ class Knockout
      */
     public static function start(Tournament $tournament): int
     {
-        if (! $tournament->hasGroups() || ! $tournament->qualifiers_per_group) {
-            throw new RuntimeException('Nel torneo indica quante squadre per girone passano alla fase finale.');
+        if (! $tournament->qualifiers_per_group) {
+            throw new RuntimeException('Nel torneo indica quante squadre passano alla fase finale.');
         }
         if ($tournament->knockoutGames()->exists()) {
             throw new RuntimeException('La fase finale è già stata creata.');
@@ -72,23 +75,17 @@ class Knockout
         $pairs = self::avoidSameGroup($pairs);
 
         // Ordine del tabellone: le teste di serie più alte si incontrano il più tardi possibile.
+        $created = 0;
         foreach (self::bracketOrder(count($pairs)) as $slot => $seed) {
             [$home, $away] = $pairs[$seed - 1];
-            Game::create([
-                'tournament_id' => $tournament->id,
-                'home_team_id' => $home->team->id,
-                'away_team_id' => $away->team->id,
-                'stage' => $stage,
-                'bracket_slot' => $slot + 1,
-                'status' => GameStatus::Programmata,
-            ]);
+            $created += self::createTie($tournament, $stage, $slot + 1, $home->team->id, $away->team->id);
         }
 
-        return count($pairs);
+        return $created;
     }
 
     /**
-     * Se un turno è finito, crea il successivo con le vincenti: 1ª contro 2ª partita, 3ª contro 4ª...
+     * Se un turno è finito, crea il successivo con le vincenti: 1° contro 2° accoppiamento, 3° contro 4°...
      * Se un risultato viene corretto, aggiorna le squadre del turno dopo finché non è giocato.
      * Restituisce il turno creato, oppure null se non c'era niente da creare.
      */
@@ -100,36 +97,114 @@ class Knockout
         }
 
         foreach (GameStage::cases() as $stage) {
-            $round = $games->where('stage', $stage)->values();
             $next = $stage->next();
-            if (! $next || $round->count() < 2) {
+            // Un accoppiamento è una partita secca, oppure andata e ritorno con lo stesso posto nel tabellone.
+            $ties = $games->where('stage', $stage)->groupBy('bracket_slot')->sortKeys()->values();
+            if (! $next || $ties->count() < 2) {
                 continue;
             }
-            $nextRound = $games->where('stage', $next)->keyBy('bracket_slot');
+            $nextTies = $games->where('stage', $next)->groupBy('bracket_slot');
+            $winners = $ties->map(fn ($legs) => self::tieWinner($legs));
 
-            foreach ($round->chunk(2)->values() as $index => $pair) {
-                [$first, $second] = $pair->values()->all();
-                $teams = ['home_team_id' => $first->winnerId(), 'away_team_id' => $second->winnerId()];
-                $existing = $nextRound->get($index + 1);
+            for ($i = 0; $i + 1 < $ties->count(); $i += 2) {
+                $slot = intdiv($i, 2) + 1;
+                $teams = ['home_team_id' => $winners[$i], 'away_team_id' => $winners[$i + 1]];
+                $existing = $nextTies->get($slot);
 
                 if ($existing) {
-                    // Risultato corretto dopo: si aggiorna la partita successiva se non è ancora giocata.
-                    if ($teams['home_team_id'] && $teams['away_team_id'] && ! $existing->isPlayed()) {
-                        $existing->update($teams);
+                    // Risultato corretto dopo: si aggiornano le partite successive non ancora giocate.
+                    if ($teams['home_team_id'] && $teams['away_team_id']) {
+                        $existing->reject->isPlayed()->each->update($teams);
                     }
-                } elseif ($round->every(fn (Game $g) => $g->winnerId() !== null)) {
-                    Game::create($teams + [
-                        'tournament_id' => $tournament->id,
-                        'stage' => $next,
-                        'bracket_slot' => $index + 1,
-                        'status' => GameStatus::Programmata,
-                    ]);
+                } elseif ($winners->every(fn ($id) => $id !== null)) {
+                    self::createTie($tournament, $next, $slot, $teams['home_team_id'], $teams['away_team_id']);
                     $created = $next;
                 }
             }
         }
 
         return $created ?? null;
+    }
+
+    /**
+     * Chi passa il turno: in partita secca chi vince (anche ai rigori); con andata e ritorno chi segna
+     * di più nelle due partite, e a parità chi vince i rigori del ritorno. Null se non è ancora deciso.
+     *
+     * @param  Collection<int, Game>  $legs
+     */
+    public static function tieWinner(Collection $legs): ?int
+    {
+        $legs = self::legsInOrder($legs);
+        if ($legs->count() < 2) {
+            return $legs->first()?->winnerId();
+        }
+        if ($legs->contains(fn (Game $g) => ! $g->isPlayed())) {
+            return null;
+        }
+
+        $return = $legs->last();
+        $goals = self::aggregate($legs);
+        $home = $goals[$return->home_team_id] ?? 0;
+        $away = $goals[$return->away_team_id] ?? 0;
+        if ($home === $away && $return->hasPenalties()) {
+            [$home, $away] = [$return->home_penalties, $return->away_penalties];
+        }
+
+        return match ($home <=> $away) {
+            1 => $return->home_team_id,
+            -1 => $return->away_team_id,
+            default => null,
+        };
+    }
+
+    /**
+     * Gol fatti da ogni squadra nelle partite giocate di un accoppiamento.
+     *
+     * @param  Collection<int, Game>  $legs
+     * @return array<int, int>
+     */
+    public static function aggregate(Collection $legs): array
+    {
+        $goals = [];
+        foreach ($legs->filter->isPlayed() as $game) {
+            $goals[$game->home_team_id] = ($goals[$game->home_team_id] ?? 0) + $game->home_score;
+            $goals[$game->away_team_id] = ($goals[$game->away_team_id] ?? 0) + $game->away_score;
+        }
+
+        return $goals;
+    }
+
+    /**
+     * @param  Collection<int, Game>  $legs
+     * @return Collection<int, Game>
+     */
+    private static function legsInOrder(Collection $legs): Collection
+    {
+        return $legs->sortBy(fn (Game $g) => $g->leg ?? 0)->values();
+    }
+
+    /**
+     * Crea le partite di un accoppiamento: una, oppure andata e ritorno se il turno lo prevede.
+     *
+     * @return int partite create
+     */
+    private static function createTie(Tournament $tournament, GameStage $stage, int $slot, int $home, int $away): int
+    {
+        $legs = $tournament->isTwoLeg($stage) ? [1, 2] : [null];
+
+        foreach ($legs as $leg) {
+            Game::create([
+                'tournament_id' => $tournament->id,
+                'home_team_id' => $home,
+                'away_team_id' => $away,
+                'stage' => $stage,
+                'leg' => $leg,
+                'bracket_slot' => $slot,
+                'status' => GameStatus::Programmata,
+            ]);
+        }
+
+        return count($legs);
     }
 
     /**

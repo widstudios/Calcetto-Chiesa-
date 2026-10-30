@@ -51,17 +51,27 @@
             </select>
             <p class="hint">Ogni girone ha la sua classifica. Marcatori, voti e migliori in campo restano di tutto il torneo.</p>
             @include('partials.error', ['field' => 'groups_count'])
-
-            <label for="qualifiers_per_group">Squadre che passano alla fase finale, per girone</label>
-            <select id="qualifiers_per_group" name="qualifiers_per_group" style="max-width: 240px" @error('qualifiers_per_group') aria-invalid="true" @enderror>
-                <option value="">Nessuna fase finale</option>
-                @foreach (range(1, 8) as $n)
-                    <option value="{{ $n }}" @selected((int) old('qualifiers_per_group', $tournament->qualifiers_per_group) === $n)>{{ $n === 1 ? 'La prima' : 'Le prime '.$n }}</option>
-                @endforeach
-            </select>
-            <p class="hint">Dopo i gironi si gioca a eliminazione diretta (ottavi, quarti, semifinali, finale). In tutto devono passare 2, 4, 8 o 16 squadre: per esempio 4 gironi con le prime 2 fanno i quarti di finale.</p>
-            @include('partials.error', ['field' => 'qualifiers_per_group'])
         </div>
+
+        <label for="qualifiers_per_group">Squadre che passano alla fase finale <span class="muted">(per girone, se a gironi)</span></label>
+        <select id="qualifiers_per_group" name="qualifiers_per_group" style="max-width: 240px" @error('qualifiers_per_group') aria-invalid="true" @enderror>
+            <option value="">Nessuna fase finale</option>
+            @foreach ([...range(1, 8), 16] as $n)
+                <option value="{{ $n }}" @selected((int) old('qualifiers_per_group', $tournament->qualifiers_per_group) === $n)>{{ $n === 1 ? 'La prima' : 'Le prime '.$n }}</option>
+            @endforeach
+        </select>
+        <p class="hint">Dopo la classifica si gioca a eliminazione diretta (ottavi, quarti, semifinali, finale). In tutto devono passare 2, 4, 8 o 16 squadre: per esempio 2 gironi con le prime 2 fanno le semifinali, un girone unico con le prime 2 fa direttamente la finale.</p>
+        @include('partials.error', ['field' => 'qualifiers_per_group'])
+
+        <span class="legend">Andata e ritorno</span>
+        @php($twoLeg = old('two_leg_stages', $tournament->two_leg_stages ?? []))
+        <div class="choices">
+            @foreach ([App\Enums\GameStage::Quarti, App\Enums\GameStage::Semifinale, App\Enums\GameStage::Finale] as $stage)
+                <label class="choice"><input type="checkbox" name="two_leg_stages[]" value="{{ $stage->value }}" @checked(in_array($stage->value, $twoLeg, true))> {{ $stage->label() }}</label>
+            @endforeach
+        </div>
+        <p class="hint">Segna i turni che si giocano in due partite: passa chi segna di più tra andata e ritorno, a parità si tirano i rigori al ritorno. Gli altri turni sono a partita secca.</p>
+        @include('partials.error', ['field' => 'two_leg_stages'])
 
         @if ($tournament->exists && $tournament->hasGroups())
             <span class="legend">Squadre nei gironi</span>

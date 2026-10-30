@@ -3,7 +3,7 @@
     <div class="game-top">
         <div class="list-meta">
             @if ($game->stage)
-                <span class="badge gold">{{ $game->stage->label() }}</span>
+                <span class="badge gold">{{ $game->stageLabel() }}</span>
             @endif
             @if ($game->groupName())
                 <span class="badge">Girone {{ $game->groupName() }}</span>

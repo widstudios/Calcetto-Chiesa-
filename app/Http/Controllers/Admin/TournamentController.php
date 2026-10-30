@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\GameStage;
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentRules;
 use App\Http\Controllers\Controller;
@@ -128,7 +129,9 @@ class TournamentController extends Controller
             'season' => ['nullable', 'string', 'max:20'],
             'format' => ['nullable', Rule::enum(TournamentFormat::class)],
             'groups_count' => ['nullable', 'required_if:format,gironi', 'integer', 'min:1', 'max:'.Tournament::MAX_GROUPS],
-            'qualifiers_per_group' => ['nullable', 'integer', 'min:1', 'max:8'],
+            'qualifiers_per_group' => ['nullable', 'integer', 'min:1', 'max:16'],
+            'two_leg_stages' => ['array'],
+            'two_leg_stages.*' => [Rule::enum(GameStage::class)],
             'starts_on' => ['nullable', 'date'],
             'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
             'lineup_max_players' => ['nullable', 'integer', 'min:1', 'max:40'],
@@ -142,7 +145,7 @@ class TournamentController extends Controller
         ], [
             'lineup_max_players.*' => 'Il massimo in distinta va da 1 a 40 giocatori.',
             'groups_count.*' => 'Indica quanti gironi, da 1 a '.Tournament::MAX_GROUPS.'.',
-            'qualifiers_per_group.*' => 'Le squadre che passano per girone vanno da 1 a 8.',
+            'qualifiers_per_group.*' => 'Le squadre che passano alla fase finale vanno da 1 a 16.',
             'rules_text.max' => 'Il testo del regolamento è troppo lungo: carica piuttosto il PDF.',
             'rules_pdf.mimes' => 'Il regolamento deve essere un file PDF.',
             'rules_pdf.max' => 'Il PDF del regolamento può pesare al massimo 10 MB.',
@@ -158,10 +161,11 @@ class TournamentController extends Controller
         }
 
         $data['format'] ??= TournamentFormat::Campionato->value;
+        $data['two_leg_stages'] = array_values($data['two_leg_stages'] ?? []) ?: null;
 
         // Il numero di gironi conta solo nei tornei a gironi.
         if ($data['format'] !== TournamentFormat::Gironi->value) {
-            $data['groups_count'] = $data['qualifiers_per_group'] = null;
+            $data['groups_count'] = null;
         }
 
         return Arr::except($data, ['groups', 'rules_pdf', 'remove_rules_pdf']);

@@ -167,11 +167,17 @@ class GameController extends Controller
         $data += ['stage' => null, 'home_score' => null, 'away_score' => null, 'home_penalties' => null, 'away_penalties' => null];
 
         // I rigori servono solo nella fase finale, quando i tempi regolamentari finiscono in parità.
+        // Con andata e ritorno contano i gol delle due partite e i rigori si tirano al ritorno.
         $draw = $data['home_score'] !== null && (int) $data['home_score'] === (int) $data['away_score'];
+        if ($data['stage'] && $data['stage'] === $game?->stage?->value && $game->leg) {
+            $draw = $game->leg === 2 && $this->aggregateTied($game, $data);
+        }
         if (! $data['stage'] || ! $draw) {
             $data['home_penalties'] = $data['away_penalties'] = null;
         } elseif ($data['home_penalties'] === null || $data['away_penalties'] === null || (int) $data['home_penalties'] === (int) $data['away_penalties']) {
-            throw ValidationException::withMessages(['home_penalties' => 'Nella fase finale serve un vincitore: inserisci il risultato dei rigori.']);
+            throw ValidationException::withMessages(['home_penalties' => $game?->leg === 2
+                ? 'Con andata e ritorno i gol sono pari: inserisci il risultato dei rigori.'
+                : 'Nella fase finale serve un vincitore: inserisci il risultato dei rigori.']);
         }
 
         // Una partita aggiunta a mano nella fase finale va in fondo al suo turno.
@@ -183,5 +189,27 @@ class GameController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Al ritorno: con il risultato inserito, i gol dell'andata più quelli del ritorno sono pari?
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function aggregateTied(Game $game, array $data): bool
+    {
+        $first = Game::where('tournament_id', $game->tournament_id)->where('stage', $game->stage)
+            ->where('bracket_slot', $game->bracket_slot)->where('leg', 1)->first();
+        if (! $first?->isPlayed() || $data['home_score'] === null) {
+            return false;
+        }
+
+        $return = new Game([
+            'home_team_id' => $data['home_team_id'], 'away_team_id' => $data['away_team_id'],
+            'home_score' => (int) $data['home_score'], 'away_score' => (int) $data['away_score'], 'status' => GameStatus::Giocata,
+        ]);
+        $goals = Knockout::aggregate(collect([$first, $return]));
+
+        return ($goals[$return->home_team_id] ?? 0) === ($goals[$return->away_team_id] ?? 0);
     }
 }
