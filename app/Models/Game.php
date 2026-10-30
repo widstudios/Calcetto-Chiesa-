@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Una partita del calendario. Si chiama "Game" perché "match" è una parola riservata in PHP.
  */
-#[Fillable(['tournament_id', 'home_team_id', 'away_team_id', 'referee_id', 'matchday', 'stage', 'bracket_slot', 'kickoff_at', 'venue', 'home_score', 'away_score', 'home_penalties', 'away_penalties', 'mvp_player_id', 'status', 'csi_code'])]
+#[Fillable(['tournament_id', 'home_team_id', 'away_team_id', 'referee_id', 'matchday', 'stage', 'bracket_slot', 'leg', 'kickoff_at', 'venue', 'home_score', 'away_score', 'home_penalties', 'away_penalties', 'mvp_player_id', 'status', 'csi_code'])]
 class Game extends Model
 {
     /** @use HasFactory<GameFactory> */
@@ -30,6 +30,7 @@ class Game extends Model
             'status' => GameStatus::class,
             'stage' => GameStage::class,
             'bracket_slot' => 'integer',
+            'leg' => 'integer',
             'home_penalties' => 'integer',
             'away_penalties' => 'integer',
         ];
@@ -87,6 +88,16 @@ class Game extends Model
     public function performances(): HasMany
     {
         return $this->hasMany(Performance::class);
+    }
+
+    /** «Semifinale · andata», «Finale»... oppure null fuori dalla fase finale. */
+    public function stageLabel(): ?string
+    {
+        return $this->stage ? $this->stage->label().match ($this->leg) {
+            1 => ' · andata',
+            2 => ' · ritorno',
+            default => '',
+        } : null;
     }
 
     public function isKnockout(): bool

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\GameStage;
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentRules;
 use Database\Factories\TournamentFactory;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'season', 'format', 'groups_count', 'qualifiers_per_group', 'starts_on', 'ends_on', 'lineup_max_players', 'rules_type', 'rules_text', 'rules_pdf', 'description'])]
+#[Fillable(['name', 'season', 'format', 'groups_count', 'qualifiers_per_group', 'two_leg_stages', 'starts_on', 'ends_on', 'lineup_max_players', 'rules_type', 'rules_text', 'rules_pdf', 'description'])]
 class Tournament extends Model
 {
     /** @use HasFactory<TournamentFactory> */
@@ -38,7 +39,14 @@ class Tournament extends Model
             'rules_type' => TournamentRules::class,
             'groups_count' => 'integer',
             'qualifiers_per_group' => 'integer',
+            'two_leg_stages' => 'array',
         ];
+    }
+
+    /** Il turno della fase finale si gioca con andata e ritorno? */
+    public function isTwoLeg(GameStage $stage): bool
+    {
+        return in_array($stage->value, $this->two_leg_stages ?? [], true);
     }
 
     public function hasGroups(): bool

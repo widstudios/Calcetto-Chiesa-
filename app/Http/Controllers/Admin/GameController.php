@@ -167,11 +167,18 @@ class GameController extends Controller
         $data += ['stage' => null, 'home_score' => null, 'away_score' => null, 'home_penalties' => null, 'away_penalties' => null];
 
         // I rigori servono solo nella fase finale, quando i tempi regolamentari finiscono in parità.
+        // Con andata e ritorno contano i gol delle due partite e i rigori si tirano al ritorno.
         $draw = $data['home_score'] !== null && (int) $data['home_score'] === (int) $data['away_score'];
+        if ($data['stage'] && $data['stage'] === $game?->stage?->value && $game->leg) {
+            $this->checkLegOrder($game, $data);
+            $draw = $game->leg === 2 && $this->aggregateTied($game, $data);
+        }
         if (! $data['stage'] || ! $draw) {
             $data['home_penalties'] = $data['away_penalties'] = null;
         } elseif ($data['home_penalties'] === null || $data['away_penalties'] === null || (int) $data['home_penalties'] === (int) $data['away_penalties']) {
-            throw ValidationException::withMessages(['home_penalties' => 'Nella fase finale serve un vincitore: inserisci il risultato dei rigori.']);
+            throw ValidationException::withMessages(['home_penalties' => $game?->leg === 2
+                ? 'Con andata e ritorno i gol sono pari: inserisci il risultato dei rigori.'
+                : 'Nella fase finale serve un vincitore: inserisci il risultato dei rigori.']);
         }
 
         // Una partita aggiunta a mano nella fase finale va in fondo al suo turno.
@@ -183,5 +190,52 @@ class GameController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Il ritorno si inserisce dopo l'andata. Correggendo l'andata a ritorno già giocato, il totale
+     * non può finire pari senza rigori: altrimenti nessuno passerebbe il turno.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function checkLegOrder(Game $game, array $data): void
+    {
+        if ($data['home_score'] === null) {
+            return;
+        }
+        $other = $this->otherLeg($game);
+        if ($game->leg === 2 && ! $other?->isPlayed()) {
+            throw ValidationException::withMessages(['home_score' => 'Inserisci prima il risultato dell\'andata.']);
+        }
+        if ($game->leg === 1 && $other?->isPlayed() && ! $other->hasPenalties() && $this->aggregateTied($game, $data)) {
+            throw ValidationException::withMessages(['home_score' => 'Con questo risultato andata e ritorno finiscono pari e il ritorno non ha i rigori. Metti prima il ritorno "da giocare", correggi l\'andata e poi reinserisci il ritorno con i rigori.']);
+        }
+    }
+
+    private function otherLeg(Game $game): ?Game
+    {
+        return Game::where('tournament_id', $game->tournament_id)->where('stage', $game->stage)
+            ->where('bracket_slot', $game->bracket_slot)->where('leg', $game->leg === 1 ? 2 : 1)->first();
+    }
+
+    /**
+     * Con il risultato inserito in questa partita, i gol dell'andata più quelli del ritorno sono pari?
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function aggregateTied(Game $game, array $data): bool
+    {
+        $other = $this->otherLeg($game);
+        if (! $other?->isPlayed() || $data['home_score'] === null) {
+            return false;
+        }
+
+        $current = new Game([
+            'home_team_id' => $data['home_team_id'], 'away_team_id' => $data['away_team_id'],
+            'home_score' => (int) $data['home_score'], 'away_score' => (int) $data['away_score'], 'status' => GameStatus::Giocata,
+        ]);
+        $goals = Knockout::aggregate(collect([$other, $current]));
+
+        return ($goals[$current->home_team_id] ?? 0) === ($goals[$current->away_team_id] ?? 0);
     }
 }
