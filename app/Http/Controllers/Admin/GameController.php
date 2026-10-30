@@ -170,6 +170,7 @@ class GameController extends Controller
         // Con andata e ritorno contano i gol delle due partite e i rigori si tirano al ritorno.
         $draw = $data['home_score'] !== null && (int) $data['home_score'] === (int) $data['away_score'];
         if ($data['stage'] && $data['stage'] === $game?->stage?->value && $game->leg) {
+            $this->checkLegOrder($game, $data);
             $draw = $game->leg === 2 && $this->aggregateTied($game, $data);
         }
         if (! $data['stage'] || ! $draw) {
@@ -192,24 +193,49 @@ class GameController extends Controller
     }
 
     /**
-     * Al ritorno: con il risultato inserito, i gol dell'andata più quelli del ritorno sono pari?
+     * Il ritorno si inserisce dopo l'andata. Correggendo l'andata a ritorno già giocato, il totale
+     * non può finire pari senza rigori: altrimenti nessuno passerebbe il turno.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function checkLegOrder(Game $game, array $data): void
+    {
+        if ($data['home_score'] === null) {
+            return;
+        }
+        $other = $this->otherLeg($game);
+        if ($game->leg === 2 && ! $other?->isPlayed()) {
+            throw ValidationException::withMessages(['home_score' => 'Inserisci prima il risultato dell\'andata.']);
+        }
+        if ($game->leg === 1 && $other?->isPlayed() && ! $other->hasPenalties() && $this->aggregateTied($game, $data)) {
+            throw ValidationException::withMessages(['home_score' => 'Con questo risultato andata e ritorno finiscono pari e il ritorno non ha i rigori. Metti prima il ritorno "da giocare", correggi l\'andata e poi reinserisci il ritorno con i rigori.']);
+        }
+    }
+
+    private function otherLeg(Game $game): ?Game
+    {
+        return Game::where('tournament_id', $game->tournament_id)->where('stage', $game->stage)
+            ->where('bracket_slot', $game->bracket_slot)->where('leg', $game->leg === 1 ? 2 : 1)->first();
+    }
+
+    /**
+     * Con il risultato inserito in questa partita, i gol dell'andata più quelli del ritorno sono pari?
      *
      * @param  array<string, mixed>  $data
      */
     private function aggregateTied(Game $game, array $data): bool
     {
-        $first = Game::where('tournament_id', $game->tournament_id)->where('stage', $game->stage)
-            ->where('bracket_slot', $game->bracket_slot)->where('leg', 1)->first();
-        if (! $first?->isPlayed() || $data['home_score'] === null) {
+        $other = $this->otherLeg($game);
+        if (! $other?->isPlayed() || $data['home_score'] === null) {
             return false;
         }
 
-        $return = new Game([
+        $current = new Game([
             'home_team_id' => $data['home_team_id'], 'away_team_id' => $data['away_team_id'],
             'home_score' => (int) $data['home_score'], 'away_score' => (int) $data['away_score'], 'status' => GameStatus::Giocata,
         ]);
-        $goals = Knockout::aggregate(collect([$first, $return]));
+        $goals = Knockout::aggregate(collect([$other, $current]));
 
-        return ($goals[$return->home_team_id] ?? 0) === ($goals[$return->away_team_id] ?? 0);
+        return ($goals[$current->home_team_id] ?? 0) === ($goals[$current->away_team_id] ?? 0);
     }
 }

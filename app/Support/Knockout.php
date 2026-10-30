@@ -112,9 +112,10 @@ class Knockout
                 $existing = $nextTies->get($slot);
 
                 if ($existing) {
-                    // Risultato corretto dopo: si aggiornano le partite successive non ancora giocate.
-                    if ($teams['home_team_id'] && $teams['away_team_id']) {
-                        $existing->reject->isPlayed()->each->update($teams);
+                    // Risultato corretto dopo: si aggiornano le squadre del turno dopo, ma solo se nessuna
+                    // delle sue partite è già giocata, così andata e ritorno restano tra le stesse squadre.
+                    if ($teams['home_team_id'] && $teams['away_team_id'] && ! $existing->contains->isPlayed()) {
+                        $existing->each->update($teams);
                     }
                 } elseif ($winners->every(fn ($id) => $id !== null)) {
                     self::createTie($tournament, $next, $slot, $teams['home_team_id'], $teams['away_team_id']);

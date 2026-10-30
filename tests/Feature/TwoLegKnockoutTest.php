@@ -120,11 +120,42 @@ class TwoLegKnockoutTest extends TestCase
         $this->assertSame([GameStage::Finale, GameStage::Finale], $final->pluck('stage')->all());
         $this->assertSame(['Alfa-Beta', 'Alfa-Beta'], $final->map(fn ($g) => $g->homeTeam->name.'-'.$g->awayTeam->name)->all());
 
+        // Il ritorno si inserisce dopo l'andata.
+        $this->saveResult($final[1], 0, 2)->assertSessionHasErrors('home_score');
         $this->saveResult($final[0], 1, 1);
         $this->saveResult($final[1], 0, 2)->assertSessionHasNoErrors();
 
+        // Correggere l'andata non può lasciare il totale pari senza rigori (3-1 e 0-2 fa 3-3).
+        $this->saveResult($final[0], 3, 1)->assertSessionHasErrors('home_score');
+        $this->assertSame(1, $final[0]->fresh()->home_score);
+
         $this->assertSame($this->team('Beta')->id, Knockout::tieWinner($final->map->fresh()));
         $this->get('/?torneo='.$tournament->id)->assertOk()->assertSee('Vince il torneo');
+    }
+
+    public function test_correcting_a_semifinal_does_not_split_a_started_two_leg_final(): void
+    {
+        $tournament = Tournament::factory()->create([
+            'format' => TournamentFormat::Campionato, 'qualifiers_per_group' => 4, 'two_leg_stages' => ['finale'],
+        ]);
+        foreach (['Alfa', 'Beta', 'Gamma', 'Delta'] as $name) {
+            Team::factory()->for($tournament)->create(['name' => $name]);
+        }
+        RoundRobin::generate($tournament);
+        $this->playGroupGames($tournament);
+        $this->actingAs($this->admin)->post(route('games.knockout', $tournament))->assertSessionHasNoErrors();
+
+        $semis = $tournament->knockoutGames()->orderBy('bracket_slot')->get();
+        $this->saveResult($semis[0], 1, 0);
+        $this->saveResult($semis[1], 1, 0);
+        $final = $tournament->knockoutGames()->where('stage', 'finale')->orderBy('leg')->get();
+        $this->assertCount(2, $final);
+        $this->saveResult($final[0], 2, 2);
+
+        // L'andata della finale è giocata: cambiare una semifinale non cambia le squadre del ritorno.
+        $this->saveResult($semis[0], 0, 1);
+        $this->assertSame($final[0]->home_team_id, $final[1]->fresh()->home_team_id);
+        $this->assertSame($final[0]->away_team_id, $final[1]->fresh()->away_team_id);
     }
 
     public function test_team_import_sets_the_group(): void
